@@ -933,6 +933,7 @@ STATIC mp_obj_t bitstruct_CompiledFormat_pack(size_t n_args, const mp_obj_t *arg
 STATIC mp_obj_t bitstruct_CompiledFormat_unpack(mp_obj_t self_in, mp_obj_t data);
 STATIC mp_obj_t bitstruct_CompiledFormat_pack_into(size_t n_args, const mp_obj_t *args);
 STATIC mp_obj_t bitstruct_CompiledFormat_unpack_from(size_t n_args, const mp_obj_t *args);
+STATIC mp_obj_t bitstruct_CompiledFormat_calcsize(mp_obj_t self_in);
 
 mp_obj_t bitstruct_CompiledFormatDict_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args);
 STATIC void bitstruct_CompiledFormatDict_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind);
@@ -940,6 +941,7 @@ STATIC mp_obj_t bitstruct_CompiledFormatDict_pack(mp_obj_t self_in, mp_obj_t dat
 STATIC mp_obj_t bitstruct_CompiledFormatDict_unpack(mp_obj_t self_in, mp_obj_t data);
 STATIC mp_obj_t bitstruct_CompiledFormatDict_pack_into(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args);
 STATIC mp_obj_t bitstruct_CompiledFormatDict_unpack_from(size_t n_args, const mp_obj_t *args);
+STATIC mp_obj_t bitstruct_CompiledFormatDict_calcsize(mp_obj_t self_in);
 
 STATIC mp_obj_t bitstruct_pack(size_t n_args, const mp_obj_t *args);
 STATIC mp_obj_t bitstruct_unpack(mp_obj_t format, mp_obj_t data);
@@ -958,12 +960,14 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(bitstruct_CompiledFormat_unpack_fun_obj, bitstr
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR(bitstruct_CompiledFormat_pack_into_fun_obj, 3, bitstruct_CompiledFormat_pack_into);
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(bitstruct_CompiledFormat_unpack_from_fun_obj, 2, 3,
                                            bitstruct_CompiledFormat_unpack_from);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(bitstruct_CompiledFormat_calcsize_fun_obj, bitstruct_CompiledFormat_calcsize);
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(bitstruct_CompiledFormatDict_pack_fun_obj, bitstruct_CompiledFormatDict_pack);
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(bitstruct_CompiledFormatDict_unpack_fun_obj, bitstruct_CompiledFormatDict_unpack);
 STATIC MP_DEFINE_CONST_FUN_OBJ_KW(bitstruct_CompiledFormatDict_pack_into_fun_obj, 4, bitstruct_CompiledFormatDict_pack_into);
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(bitstruct_CompiledFormatDict_unpack_from_fun_obj, 2, 3,
                                            bitstruct_CompiledFormatDict_unpack_from);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(bitstruct_CompiledFormatDict_calcsize_fun_obj, bitstruct_CompiledFormatDict_calcsize);
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR(bitstruct_pack_fun_obj, 1, bitstruct_pack);
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(bitstruct_unpack_fun_obj, bitstruct_unpack);
@@ -983,6 +987,7 @@ STATIC const mp_rom_map_elem_t bitstruct_CompiledFormat_locals_dict_table[]={
     { MP_ROM_QSTR(MP_QSTR_unpack),      MP_ROM_PTR(&bitstruct_CompiledFormat_unpack_fun_obj)      },
     { MP_ROM_QSTR(MP_QSTR_pack_into),   MP_ROM_PTR(&bitstruct_CompiledFormat_pack_into_fun_obj)   },
     { MP_ROM_QSTR(MP_QSTR_unpack_from), MP_ROM_PTR(&bitstruct_CompiledFormat_unpack_from_fun_obj) },
+    { MP_ROM_QSTR(MP_QSTR_calcsize),    MP_ROM_PTR(&bitstruct_CompiledFormat_calcsize_fun_obj)    },
 };
 STATIC MP_DEFINE_CONST_DICT(bitstruct_CompiledFormat_locals_dict,bitstruct_CompiledFormat_locals_dict_table);
 
@@ -992,6 +997,7 @@ STATIC const mp_rom_map_elem_t bitstruct_CompiledFormatDict_locals_dict_table[]=
     { MP_ROM_QSTR(MP_QSTR_unpack),      MP_ROM_PTR(&bitstruct_CompiledFormatDict_unpack_fun_obj)      },
     { MP_ROM_QSTR(MP_QSTR_pack_into),   MP_ROM_PTR(&bitstruct_CompiledFormatDict_pack_into_fun_obj)   },
     { MP_ROM_QSTR(MP_QSTR_unpack_from), MP_ROM_PTR(&bitstruct_CompiledFormatDict_unpack_from_fun_obj) },
+    { MP_ROM_QSTR(MP_QSTR_calcsize),    MP_ROM_PTR(&bitstruct_CompiledFormatDict_calcsize_fun_obj)    },
 };
 STATIC MP_DEFINE_CONST_DICT(bitstruct_CompiledFormatDict_locals_dict,bitstruct_CompiledFormatDict_locals_dict_table);
 
@@ -1108,6 +1114,15 @@ STATIC mp_obj_t bitstruct_CompiledFormat_unpack_from(size_t n_args, const mp_obj
 }
 
 /**
+ * Python: bitstruct.CompiledFormat.calcsize()
+ * @param self
+ */
+STATIC mp_obj_t bitstruct_CompiledFormat_calcsize(mp_obj_t self_in){
+    bitstruct_CompiledFormat_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    return calcsize(self->info_p);
+}
+
+/**
  * Python: bitstruct.CompiledFormatDict(fmt, names = None)
  * @param fmt
  * @param opt: names = None
@@ -1219,6 +1234,15 @@ STATIC mp_obj_t bitstruct_CompiledFormatDict_unpack_from(size_t n_args, const mp
 
     // raises MemoryError, OverflowError, TypeError, ValueError
     return unpack_from_dict(self->info_p, self->names_p, args[1], offset);
+}
+
+/**
+ * Python: bitstruct.CompiledFormatDict.calcsize()
+ * @param self
+ */
+STATIC mp_obj_t bitstruct_CompiledFormatDict_calcsize(mp_obj_t self_in){
+    bitstruct_CompiledFormatDict_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    return calcsize(self->info_p);
 }
 
 /**
