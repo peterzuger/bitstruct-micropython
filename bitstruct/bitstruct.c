@@ -518,21 +518,14 @@ static struct info_t *parse_format(PyObject *format_obj_p)
     int number_of_padding_fields;
     int res;
 
-    format_p = PyUnicode_AsUTF8(format_obj_p);
-
-    if (format_p == NULL) {
-        return (NULL);
-    }
+    // raises TypeError
+    format_p = mp_obj_str_get_str(format_obj_p);
 
     number_of_fields = count_number_of_fields(format_p,
                                               &number_of_padding_fields);
 
-    info_p = PyMem_RawMalloc(
-        sizeof(*info_p) + number_of_fields * sizeof(info_p->fields[0]));
-
-    if (info_p == NULL) {
-        return (NULL);
-    }
+    size_t size = sizeof(*info_p) + number_of_fields * sizeof(info_p->fields[0]);
+    info_p = alloca(size);
 
     info_p->number_of_bits = 0;
     info_p->number_of_fields = number_of_fields;
@@ -540,27 +533,19 @@ static struct info_t *parse_format(PyObject *format_obj_p)
         number_of_fields - number_of_padding_fields);
 
     for (i = 0; i < info_p->number_of_fields; i++) {
+        // raises ValueError
         format_p = parse_field(format_p, &kind, &number_of_bits);
-
-        if (format_p == NULL) {
-            PyMem_RawFree(info_p);
-
-            return (NULL);
-        }
 
         // raises NotImplementedError, ValueError
         field_info_init(&info_p->fields[i], kind, number_of_bits);
 
-        /* if (res != 0) { */
-        /*     PyMem_RawFree(info_p); */
-
-        /*     return (NULL); */
-        /* } */
-
         info_p->number_of_bits += number_of_bits;
     }
 
-    return (info_p);
+    struct info_t* n_info_p = m_malloc(size);
+    memcpy(n_info_p, info_p, size);
+
+    return n_info_p;
 }
 
 static void pack_pack(struct info_t *info_p,
