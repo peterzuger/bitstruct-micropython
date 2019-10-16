@@ -1057,41 +1057,36 @@ static PyObject *m_unpack_dict(PyObject *module_p, PyObject *args_p)
     return (unpacked_p);
 }
 
-static PyObject *unpack_from_dict(struct info_t *info_p,
-                                  PyObject *names_p,
-                                  PyObject *data_p,
-                                  PyObject *offset_p)
+static mp_obj_t unpack_from_dict(struct info_t *info_p,
+                                 mp_obj_t names_p,
+                                 mp_obj_t data_p,
+                                 mp_obj_t offset_p)
 {
     long offset;
 
+    // raises TypeError, ValueError
     offset = parse_offset(offset_p);
 
-    if (offset == -1) {
-        return (NULL);
-    }
-
-    return (unpack_dict(info_p, names_p, data_p, offset));
+    // raises MemoryError, OverflowError, TypeError, ValueError
+    return unpack_dict(info_p, names_p, data_p, offset);
 }
 
-static PyObject *pack_into_dict(struct info_t *info_p,
-                                PyObject *names_p,
-                                PyObject *buf_p,
-                                PyObject *offset_p,
-                                PyObject *data_p)
+static mp_obj_t pack_into_dict(struct info_t *info_p,
+                               mp_obj_t names_p,
+                               mp_obj_t buf_p,
+                               mp_obj_t offset_p,
+                               mp_obj_t data_p)
 {
     struct bitstream_writer_t writer;
     struct bitstream_writer_bounds_t bounds;
-    int res;
 
-    res = pack_into_prepare(info_p, buf_p, offset_p, &writer, &bounds);
+    // raises TypeError, ValueError
+    pack_into_prepare(info_p, buf_p, offset_p, &writer, &bounds);
 
-    if (res != 0) {
-        return (NULL);
-    }
-
+    // raises KeyError, NotImplementedError, OverflowError, TypeError
     pack_dict_pack(info_p, names_p, data_p, &writer);
 
-    return (pack_into_finalize(&bounds));
+    return pack_into_finalize(&bounds);
 }
 
 static PyObject *m_pack_into_dict(PyObject *module_p,
