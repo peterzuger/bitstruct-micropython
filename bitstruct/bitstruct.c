@@ -278,7 +278,7 @@ static mp_obj_t unpack_raw(struct bitstream_reader_t *self_p,
 }
 
 static void pack_zero_padding(struct bitstream_writer_t *self_p,
-                              PyObject *value_p,
+                              mp_obj_t value_p,
                               struct field_info_t *field_info_p)
 {
     bitstream_writer_write_repeated_bit(self_p,
@@ -287,7 +287,7 @@ static void pack_zero_padding(struct bitstream_writer_t *self_p,
 }
 
 static void pack_one_padding(struct bitstream_writer_t *self_p,
-                             PyObject *value_p,
+                             mp_obj_t value_p,
                              struct field_info_t *field_info_p)
 {
     bitstream_writer_write_repeated_bit(self_p,
@@ -295,12 +295,12 @@ static void pack_one_padding(struct bitstream_writer_t *self_p,
                                         field_info_p->number_of_bits);
 }
 
-static PyObject *unpack_padding(struct bitstream_reader_t *self_p,
-                                struct field_info_t *field_info_p)
+static mp_obj_t unpack_padding(struct bitstream_reader_t *self_p,
+                               struct field_info_t *field_info_p)
 {
     bitstream_reader_seek(self_p, field_info_p->number_of_bits);
 
-    return (NULL);
+    return mp_const_none;
 }
 
 static int field_info_init_signed(struct field_info_t *self_p,
