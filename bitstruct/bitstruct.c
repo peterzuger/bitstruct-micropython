@@ -82,8 +82,6 @@ struct compiled_format_dict_t {
     PyObject *names_p;
 };
 
-static PyObject *py_zero_p = NULL;
-
 static bool is_names_list(PyObject *names_p)
 {
     if (!PyList_Check(names_p)) {
@@ -1037,7 +1035,7 @@ static PyObject *m_unpack_from(PyObject *module_p,
         NULL
     };
 
-    offset_p = py_zero_p;
+    offset_p = mp_obj_new_int(0);
     res = PyArg_ParseTupleAndKeywords(args_p,
                                       kwargs_p,
                                       "OO|O",
@@ -1300,7 +1298,7 @@ static PyObject *m_pack_into_dict(PyObject *module_p,
         NULL
     };
 
-    offset_p = py_zero_p;
+    offset_p = mp_obj_new_int(0);;
     res = PyArg_ParseTupleAndKeywords(args_p,
                                       kwargs_p,
                                       "OOOOO",
@@ -1350,7 +1348,7 @@ static PyObject *m_unpack_from_dict(PyObject *module_p,
         NULL
     };
 
-    offset_p = py_zero_p;
+    offset_p = mp_obj_new_int(0);;
     res = PyArg_ParseTupleAndKeywords(args_p,
                                       kwargs_p,
                                       "OOO|O",
@@ -1596,7 +1594,7 @@ static PyObject *m_compiled_format_unpack_from(struct compiled_format_t *self_p,
         NULL
     };
 
-    offset_p = py_zero_p;
+    offset_p = mp_obj_new_int(0);;
     res = PyArg_ParseTupleAndKeywords(args_p,
                                       kwargs_p,
                                       "O|O",
@@ -1756,7 +1754,7 @@ static PyObject *m_compiled_format_dict_unpack_from(
         NULL
     };
 
-    offset_p = py_zero_p;
+    offset_p = mp_obj_new_int(0);;
     res = PyArg_ParseTupleAndKeywords(args_p,
                                       kwargs_p,
                                       "O|O",
@@ -1938,7 +1936,6 @@ PyMODINIT_FUNC PyInit_c(void)
 {
     PyObject *module_p;
 
-    py_zero_p = PyLong_FromLong(0);
     module_p = PyModule_Create(&module);
 
     if (module_p == NULL) {
