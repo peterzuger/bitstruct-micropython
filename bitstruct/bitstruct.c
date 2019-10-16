@@ -519,7 +519,6 @@ static struct info_t *parse_format(mp_obj_t format_obj_p)
     int kind;
     int number_of_bits;
     int number_of_padding_fields;
-    int res;
 
     // raises TypeError
     format_p = mp_obj_str_get_str(format_obj_p);
