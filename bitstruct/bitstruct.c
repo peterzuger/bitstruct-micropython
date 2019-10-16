@@ -721,21 +721,17 @@ static long parse_offset(PyObject *offset_p)
 {
     unsigned long offset;
 
-    offset = PyLong_AsUnsignedLong(offset_p);
+    offset = mp_obj_get_int(offset_p);
 
     if (offset == (unsigned long)-1) {
-        return (-1);
+        mp_raise_ValueError("negative offset");
     }
 
     if (offset > 0x7fffffff) {
-        PyErr_Format(PyExc_ValueError,
-                     "Offset must be less or equal to %d bits.",
-                     0x7fffffff);
-
-        return (-1);
+        mp_raise_ValueError("Offset must be less or equal to 2147483647 bits.");
     }
 
-    return (offset);
+    return offset;
 }
 
 static int pack_into_prepare(struct info_t *info_p,
