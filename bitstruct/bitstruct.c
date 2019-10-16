@@ -835,19 +835,15 @@ static PyObject *m_pack_into(PyObject *module_p,
     return (res_p);
 }
 
-static PyObject *unpack_from(struct info_t *info_p,
-                             PyObject *data_p,
-                             PyObject *offset_p)
+static mp_obj_t unpack_from(struct info_t *info_p,
+                            mp_obj_t data_p,
+                            mp_obj_t offset_p)
 {
     long offset;
 
     offset = parse_offset(offset_p);
 
-    if (offset == -1) {
-        return (NULL);
-    }
-
-    return (unpack(info_p, data_p, offset));
+    return unpack(info_p, data_p, offset);
 }
 
 static PyObject *m_unpack_from(PyObject *module_p,
