@@ -92,27 +92,22 @@ static void is_names_list(mp_obj_t names_p)
 }
 
 static void pack_signed_integer(struct bitstream_writer_t *self_p,
-                                PyObject *value_p,
+                                mp_obj_t value_p,
                                 struct field_info_t *field_info_p)
 {
     int64_t value;
     int64_t lower;
     int64_t upper;
 
-    value = PyLong_AsLongLong(value_p);
-
-    if ((value == -1) && PyErr_Occurred()) {
-        return;
-    }
+    // raises TypeError
+    value = mp_obj_get_int(value_p);
 
     if (field_info_p->number_of_bits < 64) {
         lower = field_info_p->limits.s.lower;
         upper = field_info_p->limits.s.upper;
 
         if ((value < lower) || (value > upper)) {
-            PyErr_Format(PyExc_OverflowError,
-                         "Signed integer value %lld out of range.",
-                         (long long)value);
+            mp_raise_msg(&mp_type_OverflowError, "Signed integer out of range.");
         }
 
         value &= ((1ull << field_info_p->number_of_bits) - 1);
@@ -123,8 +118,8 @@ static void pack_signed_integer(struct bitstream_writer_t *self_p,
                                     field_info_p->number_of_bits);
 }
 
-static PyObject *unpack_signed_integer(struct bitstream_reader_t *self_p,
-                                       struct field_info_t *field_info_p)
+static mp_obj_t unpack_signed_integer(struct bitstream_reader_t *self_p,
+                                      struct field_info_t *field_info_p)
 {
     uint64_t value;
     uint64_t sign_bit;
@@ -136,25 +131,20 @@ static PyObject *unpack_signed_integer(struct bitstream_reader_t *self_p,
         value |= ~(((sign_bit) << 1) - 1);
     }
 
-    return (PyLong_FromLongLong((long long)value));
+    // raises OverflowError, MemoryError
+    return mp_obj_new_int_from_ll((long long)value);
 }
 
 static void pack_unsigned_integer(struct bitstream_writer_t *self_p,
-                                  PyObject *value_p,
+                                  mp_obj_t value_p,
                                   struct field_info_t *field_info_p)
 {
     uint64_t value;
 
-    value = PyLong_AsUnsignedLongLong(value_p);
-
-    if ((value == (uint64_t)-1) && PyErr_Occurred()) {
-        return;
-    }
+    value = mp_obj_get_int(value_p);
 
     if (value > field_info_p->limits.u.upper) {
-        PyErr_Format(PyExc_OverflowError,
-                     "Unsigned integer value %llu out of range.",
-                     (unsigned long long)value);
+        mp_raise_msg(&mp_type_OverflowError, "Unsigned integer out of range.");
     }
 
     bitstream_writer_write_u64_bits(self_p,
@@ -162,15 +152,16 @@ static void pack_unsigned_integer(struct bitstream_writer_t *self_p,
                                     field_info_p->number_of_bits);
 }
 
-static PyObject *unpack_unsigned_integer(struct bitstream_reader_t *self_p,
-                                         struct field_info_t *field_info_p)
+static mp_obj_t unpack_unsigned_integer(struct bitstream_reader_t *self_p,
+                                        struct field_info_t *field_info_p)
 {
     uint64_t value;
 
     value = bitstream_reader_read_u64_bits(self_p,
                                            field_info_p->number_of_bits);
 
-    return (PyLong_FromUnsignedLongLong(value));
+    // raises OverflowError, MemoryError
+    return mp_obj_new_int_from_ull(value);
 }
 
 #if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 6
