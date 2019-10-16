@@ -1192,25 +1192,6 @@ static mp_obj_t calcsize(struct info_t *info_p)
     return mp_obj_new_int_from_ll(info_p->number_of_bits);
 }
 
-static PyObject *compiled_format_new(PyTypeObject *subtype_p,
-                                     PyObject *format_p)
-{
-    struct compiled_format_t *self_p;
-
-    self_p = (struct compiled_format_t *)subtype_p->tp_alloc(subtype_p, 0);
-
-    if (self_p != NULL) {
-        self_p->info_p = parse_format(format_p);
-
-        if (self_p->info_p == NULL) {
-            PyObject_Free(self_p);
-            self_p = NULL;
-        }
-    }
-
-    return ((PyObject *)self_p);
-}
-
 static void compiled_format_dealloc(struct compiled_format_t *self_p)
 {
     PyMem_RawFree(self_p->info_p);
@@ -1532,6 +1513,9 @@ mp_obj_t bitstruct_CompiledFormat_make_new(const mp_obj_type_t *type,
     bitstruct_CompiledFormat_obj_t *self = m_new_obj(bitstruct_CompiledFormat_obj_t);
 
     self->base.type = &bitstruct_CompiledFormat_type;
+
+    // raises MemoryError, NotImplementedError, TypeError, ValueError
+    self->info_p = parse_format(args[0]);
 
     return MP_OBJ_FROM_PTR(self);
 }
