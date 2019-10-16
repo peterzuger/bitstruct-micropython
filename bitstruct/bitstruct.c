@@ -238,7 +238,6 @@ static void pack_raw(struct bitstream_writer_t *self_p,
 {
     size_t size;
     char* buf_p;
-    int res;
 
     buf_p = (char*)mp_obj_str_get_data(value_p, &size);
 
@@ -482,8 +481,6 @@ const char *parse_field(const char *format_p,
     while (isdigit(*format_p)) {
         if (*number_of_bits_p > (INT_MAX / 100)) {
             mp_raise_ValueError("Field too long.");
-
-            return NULL;
         }
 
         *number_of_bits_p *= 10;
@@ -493,13 +490,12 @@ const char *parse_field(const char *format_p,
 
     if (*number_of_bits_p == 0) {
         mp_raise_ValueError("Field of size 0.");
-        format_p = NULL;
     }
 
     return format_p;
 }
 
-static struct info_t *parse_format(PyObject *format_obj_p)
+static struct info_t *parse_format(mp_obj_t format_obj_p)
 {
     int number_of_fields;
     struct info_t *info_p;
@@ -657,7 +653,7 @@ static mp_obj_t unpack(struct info_t *info_p, mp_obj_t data_p, long offset)
     return unpacked_p;
 }
 
-static long parse_offset(PyObject *offset_p)
+static long parse_offset(mp_obj_t offset_p)
 {
     unsigned long offset;
 
@@ -1403,13 +1399,13 @@ STATIC mp_obj_t bitstruct_unpack_from_dict(size_t n_args, const mp_obj_t *args){
  */
 STATIC mp_obj_t bitstruct_calcsize(mp_obj_t format){
     // raises MemoryError, NotImplementedError, TypeError, ValueError
-    struct info_t *info_p = parse_format(format_p);
+    struct info_t *info_p = parse_format(format);
 
     // raises MemoryError, OverflowError
-    size_p = calcsize(info_p);
+    mp_obj_t size = calcsize(info_p);
     m_free(info_p);
 
-    return size_p;
+    return size;
 }
 
 /**
