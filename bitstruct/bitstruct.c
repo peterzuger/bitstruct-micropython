@@ -71,17 +71,6 @@ struct info_t {
     struct field_info_t fields[1];
 };
 
-struct compiled_format_t {
-    PyObject_HEAD
-    struct info_t *info_p;
-};
-
-struct compiled_format_dict_t {
-    PyObject_HEAD
-    struct info_t *info_p;
-    PyObject *names_p;
-};
-
 /**
  * @raises TypeError
  */
@@ -904,16 +893,6 @@ static mp_obj_t calcsize(struct info_t *info_p)
     return mp_obj_new_int_from_ll(info_p->number_of_bits);
 }
 
-static PyObject *m_compiled_format_calcsize(struct compiled_format_t *self_p)
-{
-    return (calcsize(self_p->info_p));
-}
-
-static PyObject *m_compiled_format_dict_calcsize(
-    struct compiled_format_dict_t *self_p)
-{
-    return (calcsize(self_p->info_p));
-}
 
 typedef struct _bitstruct_CompiledFormat_obj_t{
     // base represents some basic information, like type
