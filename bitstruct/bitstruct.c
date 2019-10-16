@@ -165,27 +165,27 @@ static mp_obj_t unpack_unsigned_integer(struct bitstream_reader_t *self_p,
 }
 
 static void pack_float_32(struct bitstream_writer_t *self_p,
-                          PyObject *value_p,
+                          mp_obj_t value_p,
                           struct field_info_t *field_info_p)
 {
-    float value;
+    mp_float_t value;
     uint32_t data;
 
-    value = (float)PyFloat_AsDouble(value_p);
+    value = mp_obj_get_float(value_p);
     memcpy(&data, &value, sizeof(data));
     bitstream_writer_write_u32(self_p, data);
 }
 
-static PyObject *unpack_float_32(struct bitstream_reader_t *self_p,
-                                 struct field_info_t *field_info_p)
+static mp_obj_t unpack_float_32(struct bitstream_reader_t *self_p,
+                                struct field_info_t *field_info_p)
 {
-    float value;
+    mp_float_t value;
     uint32_t data;
 
     data = bitstream_reader_read_u32(self_p);
     memcpy(&value, &data, sizeof(value));
 
-    return (PyFloat_FromDouble(value));
+    return mp_obj_new_float(value);
 }
 
 static void pack_bool(struct bitstream_writer_t *self_p,
