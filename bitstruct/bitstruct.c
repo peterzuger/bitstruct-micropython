@@ -1411,40 +1411,6 @@ static PyObject *m_compiled_format_dict_calcsize(
     return (calcsize(self_p->info_p));
 }
 
-static PyObject *m_compile(PyObject *module_p,
-                           PyObject *args_p,
-                           PyObject *kwargs_p)
-{
-    PyObject *format_p;
-    PyObject *names_p;
-    int res;
-    static char *keywords[] = {
-        "fmt",
-        "names",
-        NULL
-    };
-
-    names_p = Py_None;
-    res = PyArg_ParseTupleAndKeywords(args_p,
-                                      kwargs_p,
-                                      "O|O",
-                                      &keywords[0],
-                                      &format_p,
-                                      &names_p);
-
-    if (res == 0) {
-        return (NULL);
-    }
-
-    if (names_p == Py_None) {
-        return (compiled_format_new(&compiled_format_type, format_p));
-    } else {
-        return (compiled_format_dict_new(&compiled_format_dict_type,
-                                         format_p,
-                                         names_p));
-    }
-}
-
 typedef struct _bitstruct_CompiledFormat_obj_t{
     // base represents some basic information, like type
     mp_obj_base_t base;
@@ -1895,7 +1861,13 @@ out1:
  * @param opt: names = None
  */
 STATIC mp_obj_t bitstruct_compile(size_t n_args, const mp_obj_t *args){
-    return mp_const_none;
+    if(n_args == 1){
+        // raises MemoryError, NotImplementedError, TypeError, ValueError
+        return bitstruct_CompiledFormat_make_new(&mp_type_NoneType, n_args, 0, args);
+    }
+
+    // raises MemoryError, NotImplementedError, TypeError, ValueError
+    return bitstruct_CompiledFormatDict_make_new(&mp_type_NoneType, n_args, 0, args);
 }
 
 
