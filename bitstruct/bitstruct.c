@@ -1,8 +1,41 @@
 /**
- * CPython 3 C extension.
+ * @file   bitstruct.c
+ * @author Erik Moqvist
+ * @author Peter Züger
+ * @date   16.10.2019
+ * @brief  bitstruct C implementation for micropython
+ *
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2019 Erik Moqvist
+ * Copyright (c) 2019 Peter Züger
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
+#include "py/obj.h"
+#include "py/runtime.h"
+#include "py/builtin.h"
+#include "py/objstr.h"
+#include "py/objarray.h"
 
-#include <Python.h>
 #include <stdbool.h>
 #include "bitstream.h"
 
@@ -1977,3 +2010,401 @@ PyMODINIT_FUNC PyInit_c(void)
 
     return (module_p);
 }
+
+
+
+
+
+
+
+
+typedef struct _bitstruct_CompiledFormat_obj_t{
+    // base represents some basic information, like type
+    mp_obj_base_t base;
+
+    struct info_t* info_p;
+}bitstruct_CompiledFormat_obj_t;
+
+typedef struct _bitstruct_CompiledFormatDict_obj_t{
+    // base represents some basic information, like type
+    mp_obj_base_t base;
+
+    struct info_t* info_p;
+    mp_obj_t names_p;
+}bitstruct_CompiledFormatDict_obj_t;
+
+mp_obj_t bitstruct_CompiledFormat_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args);
+STATIC void bitstruct_CompiledFormat_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind);
+STATIC mp_obj_t bitstruct_CompiledFormat_pack(size_t n_args, const mp_obj_t *args);
+STATIC mp_obj_t bitstruct_CompiledFormat_unpack(mp_obj_t self_in, mp_obj_t data);
+STATIC mp_obj_t bitstruct_CompiledFormat_pack_into(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args);
+STATIC mp_obj_t bitstruct_CompiledFormat_unpack_from(size_t n_args, const mp_obj_t *args);
+
+mp_obj_t bitstruct_CompiledFormatDict_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args);
+STATIC void bitstruct_CompiledFormatDict_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind);
+STATIC mp_obj_t bitstruct_CompiledFormatDict_pack(mp_obj_t self_in, mp_obj_t data);
+STATIC mp_obj_t bitstruct_CompiledFormatDict_unpack(mp_obj_t self_in, mp_obj_t data);
+STATIC mp_obj_t bitstruct_CompiledFormatDict_pack_into(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args);
+STATIC mp_obj_t bitstruct_CompiledFormatDict_unpack_from(size_t n_args, const mp_obj_t *args);
+
+STATIC mp_obj_t bitstruct_pack(size_t n_args, const mp_obj_t *args);
+STATIC mp_obj_t bitstruct_unpack(mp_obj_t format, mp_obj_t data);
+STATIC mp_obj_t bitstruct_pack_into(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args);
+STATIC mp_obj_t bitstruct_unpack_from(size_t n_args, const mp_obj_t *args);
+STATIC mp_obj_t bitstruct_pack_dict(mp_obj_t format, mp_obj_t names, mp_obj_t data);
+STATIC mp_obj_t bitstruct_unpack_dict(mp_obj_t format, mp_obj_t names, mp_obj_t data);
+STATIC mp_obj_t bitstruct_pack_into_dict(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args);
+STATIC mp_obj_t bitstruct_unpack_from_dict(size_t n_args, const mp_obj_t *args);
+STATIC mp_obj_t bitstruct_calcsize(mp_obj_t format);
+STATIC mp_obj_t bitstruct_byteswap(size_t n_args, const mp_obj_t *args);
+STATIC mp_obj_t bitstruct_compile(size_t n_args, const mp_obj_t *args);
+
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR(bitstruct_CompiledFormat_pack_fun_obj, 1, bitstruct_CompiledFormat_pack);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(bitstruct_CompiledFormat_unpack_fun_obj, bitstruct_CompiledFormat_unpack);
+STATIC MP_DEFINE_CONST_FUN_OBJ_KW(bitstruct_CompiledFormat_pack_into_fun_obj, 3, bitstruct_CompiledFormat_pack_into);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(bitstruct_CompiledFormat_unpack_from_fun_obj, 2, 3,
+                                           bitstruct_CompiledFormat_unpack_from);
+
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(bitstruct_CompiledFormatDict_pack_fun_obj, bitstruct_CompiledFormatDict_pack);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(bitstruct_CompiledFormatDict_unpack_fun_obj, bitstruct_CompiledFormatDict_unpack);
+STATIC MP_DEFINE_CONST_FUN_OBJ_KW(bitstruct_CompiledFormatDict_pack_into_fun_obj, 4, bitstruct_CompiledFormatDict_pack_into);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(bitstruct_CompiledFormatDict_unpack_from_fun_obj, 2, 3,
+                                           bitstruct_CompiledFormatDict_unpack_from);
+
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR(bitstruct_pack_fun_obj, 1, bitstruct_pack);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(bitstruct_unpack_fun_obj, bitstruct_unpack);
+STATIC MP_DEFINE_CONST_FUN_OBJ_KW(bitstruct_pack_into_fun_obj, 3, bitstruct_pack_into);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(bitstruct_unpack_from_fun_obj, 2, 3, bitstruct_unpack_from);
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(bitstruct_pack_dict_fun_obj, bitstruct_pack_dict);
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(bitstruct_unpack_dict_fun_obj, bitstruct_unpack_dict);
+STATIC MP_DEFINE_CONST_FUN_OBJ_KW(bitstruct_pack_into_dict_fun_obj, 5, bitstruct_pack_into_dict);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(bitstruct_unpack_from_dict_fun_obj, 3, 4, bitstruct_unpack_from_dict);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(bitstruct_calcsize_fun_obj, bitstruct_calcsize);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(bitstruct_byteswap_fun_obj, 2, 3, bitstruct_byteswap);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(bitstruct_compile_fun_obj, 1, 2, bitstruct_compile);
+
+STATIC const mp_rom_map_elem_t bitstruct_CompiledFormat_locals_dict_table[]={
+    // class methods
+    { MP_ROM_QSTR(MP_QSTR_pack),        MP_ROM_PTR(&bitstruct_CompiledFormat_pack_fun_obj)        },
+    { MP_ROM_QSTR(MP_QSTR_unpack),      MP_ROM_PTR(&bitstruct_CompiledFormat_unpack_fun_obj)      },
+    { MP_ROM_QSTR(MP_QSTR_pack_into),   MP_ROM_PTR(&bitstruct_CompiledFormat_pack_into_fun_obj)   },
+    { MP_ROM_QSTR(MP_QSTR_unpack_from), MP_ROM_PTR(&bitstruct_CompiledFormat_unpack_from_fun_obj) },
+};
+STATIC MP_DEFINE_CONST_DICT(bitstruct_CompiledFormat_locals_dict,bitstruct_CompiledFormat_locals_dict_table);
+
+STATIC const mp_rom_map_elem_t bitstruct_CompiledFormatDict_locals_dict_table[]={
+    // class methods
+    { MP_ROM_QSTR(MP_QSTR_pack),        MP_ROM_PTR(&bitstruct_CompiledFormatDict_pack_fun_obj)        },
+    { MP_ROM_QSTR(MP_QSTR_unpack),      MP_ROM_PTR(&bitstruct_CompiledFormatDict_unpack_fun_obj)      },
+    { MP_ROM_QSTR(MP_QSTR_pack_into),   MP_ROM_PTR(&bitstruct_CompiledFormatDict_pack_into_fun_obj)   },
+    { MP_ROM_QSTR(MP_QSTR_unpack_from), MP_ROM_PTR(&bitstruct_CompiledFormatDict_unpack_from_fun_obj) },
+};
+STATIC MP_DEFINE_CONST_DICT(bitstruct_CompiledFormatDict_locals_dict,bitstruct_CompiledFormatDict_locals_dict_table);
+
+
+const mp_obj_type_t bitstruct_CompiledFormat_type={
+    // "inherit" the type "type"
+    { &mp_type_type },
+    // give it a name
+    .name = MP_QSTR_CompiledFormat,
+    // give it a print-function
+    .print = bitstruct_CompiledFormat_print,
+    // give it a constructor
+    .make_new = bitstruct_CompiledFormat_make_new,
+    // and the global members
+    .locals_dict = (mp_obj_dict_t*)&bitstruct_CompiledFormat_locals_dict,
+};
+
+
+const mp_obj_type_t bitstruct_CompiledFormatDict_type={
+    // "inherit" the type "type"
+    { &mp_type_type },
+    // give it a name
+    .name = MP_QSTR_CompiledFormatDict,
+    // give it a print-function
+    .print = bitstruct_CompiledFormatDict_print,
+    // give it a constructor
+    .make_new = bitstruct_CompiledFormatDict_make_new,
+    // and the global members
+    .locals_dict = (mp_obj_dict_t*)&bitstruct_CompiledFormatDict_locals_dict,
+};
+
+
+mp_obj_t bitstruct_CompiledFormat_make_new(const mp_obj_type_t *type,
+                                           size_t n_args,
+                                           size_t n_kw,
+                                           const mp_obj_t *args){
+    mp_arg_check_num(n_args, n_kw, 1, 1, false);
+
+    bitstruct_CompiledFormat_obj_t *self = m_new_obj(bitstruct_CompiledFormat_obj_t);
+
+    self->base.type = &bitstruct_CompiledFormat_type;
+
+    return MP_OBJ_FROM_PTR(self);
+}
+
+STATIC void bitstruct_CompiledFormat_print(const mp_print_t *print,
+                                           mp_obj_t self_in,mp_print_kind_t kind){
+    bitstruct_CompiledFormat_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    mp_printf(print, "CompiledFormat()");
+}
+
+/**
+ * Python: bitstruct.CompiledFormat.pack(*args)
+ * @param self
+ * @param args*
+ */
+STATIC mp_obj_t bitstruct_CompiledFormat_pack(size_t n_args, const mp_obj_t *args){
+    bitstruct_CompiledFormat_obj_t *self = MP_OBJ_TO_PTR(args[0]);
+    (void)self;
+    return mp_const_none;
+}
+
+/**
+ * Python: bitstruct.CompiledFormat.unpack(data)
+ * @param self
+ * @param data
+ */
+STATIC mp_obj_t bitstruct_CompiledFormat_unpack(mp_obj_t self_in, mp_obj_t data){
+    bitstruct_CompiledFormat_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    (void)self;
+    return mp_const_none;
+}
+
+/**
+ * Python: bitstruct.CompiledFormat.pack_into(buf, offset, *args, **kwargs)
+ * @param self
+ * @param buf
+ * @param offset
+ * @param args*
+ * @param kwargs:
+ */
+STATIC mp_obj_t bitstruct_CompiledFormat_pack_into(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args){
+    bitstruct_CompiledFormat_obj_t *self = MP_OBJ_TO_PTR(pos_args[0]);
+    (void)self;
+    return mp_const_none;
+}
+
+/**
+ * Python: bitstruct.CompiledFormat.unpack_from(data, offset = 0)
+ * @param self
+ * @param data
+ * @param opt: offset = 0
+ */
+STATIC mp_obj_t bitstruct_CompiledFormat_unpack_from(size_t n_args, const mp_obj_t *args){
+    bitstruct_CompiledFormat_obj_t *self = MP_OBJ_TO_PTR(args[0]);
+    (void)self;
+    return mp_const_none;
+}
+
+/**
+ * Python: bitstruct.CompiledFormatDict(fmt, names = None)
+ * @param fmt
+ * @param opt: names = None
+ */
+mp_obj_t bitstruct_CompiledFormatDict_make_new(const mp_obj_type_t *type,
+                                               size_t n_args,
+                                               size_t n_kw,
+                                               const mp_obj_t *args){
+    mp_arg_check_num(n_args, n_kw, 1, 2, true);
+
+    bitstruct_CompiledFormatDict_obj_t *self = m_new_obj(bitstruct_CompiledFormatDict_obj_t);
+
+    self->base.type = &bitstruct_CompiledFormatDict_type;
+
+    return MP_OBJ_FROM_PTR(self);
+}
+
+STATIC void bitstruct_CompiledFormatDict_print(const mp_print_t *print,
+                                               mp_obj_t self_in,mp_print_kind_t kind){
+    bitstruct_CompiledFormatDict_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    mp_printf(print, "CompiledFormatDict()");
+}
+
+/**
+ * Python: bitstruct.CompiledFormatDict.pack(data)
+ * @param self
+ * @param data
+ */
+STATIC mp_obj_t bitstruct_CompiledFormatDict_pack(mp_obj_t self_in, mp_obj_t data){
+    bitstruct_CompiledFormatDict_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    (void)self;
+    return mp_const_none;
+}
+
+/**
+ * Python: bitstruct.CompiledFormatDict.unpack(data)
+ * @param self
+ * @param data
+ */
+STATIC mp_obj_t bitstruct_CompiledFormatDict_unpack(mp_obj_t self_in, mp_obj_t data){
+    bitstruct_CompiledFormatDict_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    (void)self;
+    return mp_const_none;
+}
+
+/**
+ * Python: bitstruct.CompiledFormatDict.pack_into(buf, offset, data, **kwargs)
+ * @param self
+ * @param buf
+ * @param offset
+ * @param data
+ * @param kwargs:
+ */
+STATIC mp_obj_t bitstruct_CompiledFormatDict_pack_into(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args){
+    bitstruct_CompiledFormatDict_obj_t *self = MP_OBJ_TO_PTR(pos_args[0]);
+    (void)self;
+    return mp_const_none;
+}
+
+/**
+ * Python: bitstruct.CompiledFormatDict.unpack_from(data, offset = 0)
+ * @param self
+ * @param data
+ * @param opt: offset = 0
+ */
+STATIC mp_obj_t bitstruct_CompiledFormatDict_unpack_from(size_t n_args, const mp_obj_t *args){
+    bitstruct_CompiledFormatDict_obj_t *self = MP_OBJ_TO_PTR(args[0]);
+    (void)self;
+    return mp_const_none;
+}
+
+/**
+ * Python: bitstruct.pack(fmt, *args)
+ * @param fmt
+ * @param args*
+ */
+STATIC mp_obj_t bitstruct_pack(size_t n_args, const mp_obj_t *args){
+    return mp_const_none;
+}
+
+/**
+ * Python: bitstruct.unpack(fmt, data)
+ * @param fmt
+ * @param data
+ */
+STATIC mp_obj_t bitstruct_unpack(mp_obj_t format, mp_obj_t data){
+    return mp_const_none;
+}
+
+/**
+ * Python: bitstruct.pack_into(fmt, buf, offset, *args, **kwargs)
+ * @param fmt
+ * @param buf
+ * @param offset
+ * @param args*
+ * @param kwargs:
+ */
+STATIC mp_obj_t bitstruct_pack_into(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args){
+    return mp_const_none;
+}
+
+/**
+ * Python: bitstruct.unpack_from(fmt, data, offset=0)
+ * @param fmt
+ * @param data
+ * @param opt: offset = 0
+ */
+STATIC mp_obj_t bitstruct_unpack_from(size_t n_args, const mp_obj_t *args){
+    return mp_const_none;
+}
+
+/**
+ * Python: bitstruct.pack_dict(fmt, names, data)
+ * @param fmt
+ * @param names
+ * @param data
+ */
+STATIC mp_obj_t bitstruct_pack_dict(mp_obj_t format, mp_obj_t names, mp_obj_t data){
+    return mp_const_none;
+}
+
+/**
+ * Python: bitstruct.unpack_dict(fmt, names, data)
+ * @param fmt
+ * @param names
+ * @param data
+ */
+STATIC mp_obj_t bitstruct_unpack_dict(mp_obj_t format, mp_obj_t names, mp_obj_t data){
+    return mp_const_none;
+}
+
+/**
+ * Python: bitstruct.pack_into_dict(fmt, names, buf, offset, data, **kwargs)
+ * @param fmt
+ * @param names
+ * @param buf
+ * @param offset
+ * @param data
+ * @param kwargs:
+ */
+STATIC mp_obj_t bitstruct_pack_into_dict(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args){
+    return mp_const_none;
+}
+
+/**
+ * Python: bitstruct.unpack_from_dict(fmt, names, data, offset=0)
+ * @param fmt
+ * @param names
+ * @param data
+ * @param opt: offset = 0
+ */
+STATIC mp_obj_t bitstruct_unpack_from_dict(size_t n_args, const mp_obj_t *args){
+    return mp_const_none;
+}
+
+/**
+ * Python: bitstruct.calcsize(fmt)
+ * @param fmt
+ */
+STATIC mp_obj_t bitstruct_calcsize(mp_obj_t format){
+    return mp_const_none;
+}
+
+/**
+ * Python: bitstruct.byteswap(fmt, data, offset=0)
+ * @param fmt
+ * @param data
+ * @param opt: offset = 0
+ */
+STATIC mp_obj_t bitstruct_byteswap(size_t n_args, const mp_obj_t *args){
+    return mp_const_none;
+}
+
+/**
+ * Python: bitstruct.compile(fmt, names=None)
+ * @param fmt
+ * @param opt: names = None
+ */
+STATIC mp_obj_t bitstruct_compile(size_t n_args, const mp_obj_t *args){
+    return mp_const_none;
+}
+
+
+STATIC const mp_map_elem_t bitstruct_globals_table[] = {
+    { MP_OBJ_NEW_QSTR(MP_QSTR___name__),           MP_OBJ_NEW_QSTR(MP_QSTR_bitstruct)            },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_pack),               (mp_obj_t)&bitstruct_pack_fun_obj             },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_unpack),             (mp_obj_t)&bitstruct_unpack_fun_obj           },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_pack_into),          (mp_obj_t)&bitstruct_pack_into_fun_obj        },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_unpack_from),        (mp_obj_t)&bitstruct_unpack_from_fun_obj      },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_pack_dict),          (mp_obj_t)&bitstruct_pack_dict_fun_obj        },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_unpack_dict),        (mp_obj_t)&bitstruct_unpack_dict_fun_obj      },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_pack_into_dict),     (mp_obj_t)&bitstruct_pack_into_dict_fun_obj   },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_unpack_from_dict),   (mp_obj_t)&bitstruct_unpack_from_dict_fun_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_calcsize),           (mp_obj_t)&bitstruct_calcsize_fun_obj         },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_byteswap),           (mp_obj_t)&bitstruct_byteswap_fun_obj         },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_compile),            (mp_obj_t)&bitstruct_compile_fun_obj          },
+
+    { MP_OBJ_NEW_QSTR(MP_QSTR_CompiledFormat),     (mp_obj_t)&bitstruct_CompiledFormat_type      },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_CompiledFormatDict), (mp_obj_t)&bitstruct_CompiledFormatDict_type  },
+};
+
+STATIC MP_DEFINE_CONST_DICT(
+    mp_module_bitstruct_globals,
+    bitstruct_globals_table
+    );
+
+const mp_obj_module_t mp_module_bitstruct = {
+    .base = { &mp_type_module },
+    .globals = (mp_obj_dict_t*)&mp_module_bitstruct_globals,
+};
