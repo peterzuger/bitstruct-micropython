@@ -470,9 +470,11 @@ static int count_number_of_fields(const char *format_p,
         format_p++;
     }
 
-    return (count);
+    return count;
 }
 
+static inline int isspace(int c){return (((c>='\t')&&(c<='\r')) || (c==' '));}
+static inline int isdigit(int c){return ((c>='0')&&(c<='9'));}
 const char *parse_field(const char *format_p,
                         int *kind_p,
                         int *number_of_bits_p)
@@ -487,9 +489,9 @@ const char *parse_field(const char *format_p,
 
     while (isdigit(*format_p)) {
         if (*number_of_bits_p > (INT_MAX / 100)) {
-            PyErr_SetString(PyExc_ValueError, "Field too long.");
+            mp_raise_ValueError("Field too long.");
 
-            return (NULL);
+            return NULL;
         }
 
         *number_of_bits_p *= 10;
@@ -498,11 +500,11 @@ const char *parse_field(const char *format_p,
     }
 
     if (*number_of_bits_p == 0) {
-        PyErr_SetString(PyExc_ValueError, "Field of size 0.");
+        mp_raise_ValueError("Field of size 0.");
         format_p = NULL;
     }
 
-    return (format_p);
+    return format_p;
 }
 
 static struct info_t *parse_format(PyObject *format_obj_p)
