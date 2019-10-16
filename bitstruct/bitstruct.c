@@ -164,34 +164,6 @@ static mp_obj_t unpack_unsigned_integer(struct bitstream_reader_t *self_p,
     return mp_obj_new_int_from_ull(value);
 }
 
-#if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 6
-
-static void pack_float_16(struct bitstream_writer_t *self_p,
-                          PyObject *value_p,
-                          struct field_info_t *field_info_p)
-{
-    uint8_t buf[2];
-
-    _PyFloat_Pack2(PyFloat_AsDouble(value_p),
-                   &buf[0],
-                   PY_BIG_ENDIAN);
-    bitstream_writer_write_bytes(self_p, &buf[0], sizeof(buf));
-}
-
-static PyObject *unpack_float_16(struct bitstream_reader_t *self_p,
-                                 struct field_info_t *field_info_p)
-{
-    uint8_t buf[2];
-    double value;
-
-    bitstream_reader_read_bytes(self_p, &buf[0], sizeof(buf));
-    value = _PyFloat_Unpack2(&buf[0], PY_BIG_ENDIAN);
-
-    return (PyFloat_FromDouble(value));
-}
-
-#endif
-
 static void pack_float_32(struct bitstream_writer_t *self_p,
                           PyObject *value_p,
                           struct field_info_t *field_info_p)
@@ -211,32 +183,6 @@ static PyObject *unpack_float_32(struct bitstream_reader_t *self_p,
     uint32_t data;
 
     data = bitstream_reader_read_u32(self_p);
-    memcpy(&value, &data, sizeof(value));
-
-    return (PyFloat_FromDouble(value));
-}
-
-static void pack_float_64(struct bitstream_writer_t *self_p,
-                          PyObject *value_p,
-                          struct field_info_t *field_info_p)
-{
-    double value;
-    uint64_t data;
-
-    value = PyFloat_AsDouble(value_p);
-    memcpy(&data, &value, sizeof(data));
-    bitstream_writer_write_u64_bits(self_p,
-                                    data,
-                                    field_info_p->number_of_bits);
-}
-
-static PyObject *unpack_float_64(struct bitstream_reader_t *self_p,
-                                 struct field_info_t *field_info_p)
-{
-    double value;
-    uint64_t data;
-
-    data = bitstream_reader_read_u64(self_p);
     memcpy(&value, &data, sizeof(value));
 
     return (PyFloat_FromDouble(value));
@@ -409,30 +355,13 @@ static int field_info_init_float(struct field_info_t *self_p,
 {
     switch (number_of_bits) {
 
-#if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 6
-    case 16:
-        self_p->pack = pack_float_16;
-        self_p->unpack = unpack_float_16;
-        break;
-#endif
-
     case 32:
         self_p->pack = pack_float_32;
         self_p->unpack = unpack_float_32;
         break;
 
-    case 64:
-        self_p->pack = pack_float_64;
-        self_p->unpack = unpack_float_64;
-        break;
-
     default:
-#if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 6
-        PyErr_SetString(PyExc_NotImplementedError,
-                        "Float not 16, 32 or 64 bits.");
-#else
-        PyErr_SetString(PyExc_NotImplementedError, "Float not 32 or 64 bits.");
-#endif
+        PyErr_SetString(PyExc_NotImplementedError, "Float not 32 bits.");
         return (-1);
     }
 
