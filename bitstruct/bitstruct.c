@@ -753,11 +753,6 @@ static PyObject *pack(struct info_t *info_p,
     return (pack_finalize(packed_p));
 }
 
-PyDoc_STRVAR(pack___doc__,
-             "pack(fmt, *args)\n"
-             "--\n"
-             "\n");
-
 static PyObject *m_pack(PyObject *module_p, PyObject *args_p)
 {
     Py_ssize_t number_of_args;
@@ -834,11 +829,6 @@ static PyObject *unpack(struct info_t *info_p, PyObject *data_p, long offset)
 
     return (unpacked_p);
 }
-
-PyDoc_STRVAR(unpack___doc__,
-             "unpack(fmt, data)\n"
-             "--\n"
-             "\n");
 
 static PyObject *m_unpack(PyObject *module_p, PyObject *args_p)
 {
@@ -976,11 +966,6 @@ static PyObject *pack_into(struct info_t *info_p,
     return (pack_into_finalize(&bounds));
 }
 
-PyDoc_STRVAR(pack_into___doc__,
-             "pack_into(fmt, buf, offset, *args, **kwargs)\n"
-             "--\n"
-             "\n");
-
 static PyObject *m_pack_into(PyObject *module_p,
                              PyObject *args_p,
                              PyObject *kwargs_p)
@@ -1034,11 +1019,6 @@ static PyObject *unpack_from(struct info_t *info_p,
 
     return (unpack(info_p, data_p, offset));
 }
-
-PyDoc_STRVAR(unpack_from___doc__,
-             "unpack_from(fmt, data, offset=0)\n"
-             "--\n"
-             "\n");
 
 static PyObject *m_unpack_from(PyObject *module_p,
                                PyObject *args_p,
@@ -1138,11 +1118,6 @@ static PyObject *pack_dict(struct info_t *info_p,
     return (pack_finalize(packed_p));
 }
 
-PyDoc_STRVAR(pack_dict___doc__,
-             "pack_dict(fmt, names, data)\n"
-             "--\n"
-             "\n");
-
 static PyObject *m_pack_dict(PyObject *module_p, PyObject *args_p)
 {
     PyObject *format_p;
@@ -1236,11 +1211,6 @@ static PyObject *unpack_dict(struct info_t *info_p,
     return (unpacked_p);
 }
 
-PyDoc_STRVAR(unpack_dict___doc__,
-             "unpack_dict(fmt, names, data)\n"
-             "--\n"
-             "\n");
-
 static PyObject *m_unpack_dict(PyObject *module_p, PyObject *args_p)
 {
     PyObject *format_p;
@@ -1309,11 +1279,6 @@ static PyObject *pack_into_dict(struct info_t *info_p,
     return (pack_into_finalize(&bounds));
 }
 
-PyDoc_STRVAR(pack_into_dict___doc__,
-             "pack_into_dict(fmt, names, buf, offset, data, **kwargs)\n"
-             "--\n"
-             "\n");
-
 static PyObject *m_pack_into_dict(PyObject *module_p,
                                   PyObject *args_p,
                                   PyObject *kwargs_p)
@@ -1365,11 +1330,6 @@ static PyObject *m_pack_into_dict(PyObject *module_p,
 
     return (res_p);
 }
-
-PyDoc_STRVAR(unpack_from_dict___doc__,
-             "unpack_from_dict(fmt, names, data, offset=0)\n"
-             "--\n"
-             "\n");
 
 static PyObject *m_unpack_from_dict(PyObject *module_p,
                                     PyObject *args_p,
@@ -1425,11 +1385,6 @@ static PyObject *calcsize(struct info_t *info_p)
     return (PyLong_FromLong(info_p->number_of_bits));
 }
 
-PyDoc_STRVAR(calcsize___doc__,
-             "calcsize(fmt)\n"
-             "--\n"
-             "\n");
-
 static PyObject *m_calcsize(PyObject *module_p, PyObject *format_p)
 {
     PyObject *size_p;
@@ -1446,11 +1401,6 @@ static PyObject *m_calcsize(PyObject *module_p, PyObject *format_p)
 
     return (size_p);
 }
-
-PyDoc_STRVAR(byteswap___doc__,
-             "byteswap(fmt, data, offset=0)\n"
-             "--\n"
-             "\n");
 
 static PyObject *m_byteswap(PyObject *module_p, PyObject *args_p)
 {
@@ -1871,11 +1821,6 @@ static PyTypeObject compiled_format_dict_type = {
     .tp_dealloc = (destructor)compiled_format_dict_dealloc,
     .tp_methods = compiled_format_dict_methods,
 };
-
-PyDoc_STRVAR(compile___doc__,
-             "compile(fmt, names=None)\n"
-             "--\n"
-             "\n");
 
 static PyObject *m_compile(PyObject *module_p,
                            PyObject *args_p,
