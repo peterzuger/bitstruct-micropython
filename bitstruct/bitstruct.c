@@ -817,35 +817,6 @@ static mp_obj_t pack_dict(struct info_t *info_p,
     return packed_p;
 }
 
-static PyObject *m_pack_dict(PyObject *module_p, PyObject *args_p)
-{
-    PyObject *format_p;
-    PyObject *names_p;
-    PyObject *data_p;
-    PyObject *packed_p;
-    struct info_t *info_p;
-    int res;
-
-    res = PyArg_ParseTuple(args_p, "OOO", &format_p, &names_p, &data_p);
-
-    if (res == 0) {
-        return (NULL);
-    }
-
-    info_p = parse_format(format_p);
-
-    if (info_p == NULL) {
-        return (NULL);
-    }
-
-    is_names_list(names_p);
-
-    packed_p = pack_dict(info_p, names_p, data_p);
-    PyMem_RawFree(info_p);
-
-    return (packed_p);
-}
-
 static mp_obj_t unpack_dict(struct info_t *info_p,
                             mp_obj_t names_p,
                             mp_obj_t data_p,
@@ -893,35 +864,6 @@ static mp_obj_t unpack_dict(struct info_t *info_p,
     }
 
     return unpacked_p;
-}
-
-static PyObject *m_unpack_dict(PyObject *module_p, PyObject *args_p)
-{
-    PyObject *format_p;
-    PyObject *names_p;
-    PyObject *data_p;
-    PyObject *unpacked_p;
-    struct info_t *info_p;
-    int res;
-
-    res = PyArg_ParseTuple(args_p, "OOO", &format_p, &names_p, &data_p);
-
-    if (res == 0) {
-        return (NULL);
-    }
-
-    info_p = parse_format(format_p);
-
-    if (info_p == NULL) {
-        return (NULL);
-    }
-
-    is_names_list(names_p);
-
-    unpacked_p = unpack_dict(info_p, names_p, data_p, 0);
-    PyMem_RawFree(info_p);
-
-    return (unpacked_p);
 }
 
 static mp_obj_t unpack_from_dict(struct info_t *info_p,
@@ -1475,7 +1417,20 @@ STATIC mp_obj_t bitstruct_unpack_from(size_t n_args, const mp_obj_t *args){
  * @param data
  */
 STATIC mp_obj_t bitstruct_pack_dict(mp_obj_t format, mp_obj_t names, mp_obj_t data){
-    return mp_const_none;
+    mp_obj_t packed_p;
+    struct info_t *info_p;
+
+    // raises MemoryError, NotImplementedError, TypeError, ValueError
+    info_p = parse_format(format);
+
+    // raises TypeError
+    is_names_list(names);
+
+    // raises KeyError, MemoryError, NotImplementedError, OverflowError, ValueError
+    packed_p = pack_dict(info_p, names, data);
+    m_free(info_p);
+
+    return packed_p;
 }
 
 /**
@@ -1485,7 +1440,20 @@ STATIC mp_obj_t bitstruct_pack_dict(mp_obj_t format, mp_obj_t names, mp_obj_t da
  * @param data
  */
 STATIC mp_obj_t bitstruct_unpack_dict(mp_obj_t format, mp_obj_t names, mp_obj_t data){
-    return mp_const_none;
+    mp_obj_t unpacked_p;
+    struct info_t *info_p;
+
+    // raises MemoryError, NotImplementedError, TypeError, ValueError
+    info_p = parse_format(format);
+
+    // raises TypeError
+    is_names_list(names);
+
+    // raises MemoryError, OverflowError, TypeError, ValueError
+    unpacked_p = unpack_dict(info_p, names, data, 0);
+    m_free(info_p);
+
+    return unpacked_p;
 }
 
 /**
