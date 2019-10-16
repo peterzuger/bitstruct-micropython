@@ -1197,83 +1197,6 @@ static PyObject *m_compiled_format_calcsize(struct compiled_format_t *self_p)
     return (calcsize(self_p->info_p));
 }
 
-static PyObject *m_compiled_format_dict_pack(struct compiled_format_dict_t *self_p,
-                                             PyObject *data_p)
-{
-    return (pack_dict(self_p->info_p, self_p->names_p, data_p));
-}
-
-static PyObject *m_compiled_format_dict_unpack(
-    struct compiled_format_dict_t *self_p,
-    PyObject *data_p)
-{
-    return (unpack_dict(self_p->info_p, self_p->names_p, data_p, 0));
-}
-
-static PyObject *m_compiled_format_dict_pack_into(
-    struct compiled_format_dict_t *self_p,
-    PyObject *args_p,
-    PyObject *kwargs_p)
-{
-    PyObject *buf_p;
-    PyObject *data_p;
-    PyObject *offset_p;
-    int res;
-    static char *keywords[] = {
-        "buf",
-        "data",
-        "offset",
-        NULL
-    };
-
-    res = PyArg_ParseTupleAndKeywords(args_p,
-                                      kwargs_p,
-                                      "OOO",
-                                      &keywords[0],
-                                      &buf_p,
-                                      &data_p,
-                                      &offset_p);
-
-    if (res == 0) {
-        return (NULL);
-    }
-
-    return (pack_into_dict(self_p->info_p,
-                           self_p->names_p,
-                           buf_p,
-                           data_p,
-                           offset_p));
-}
-
-static PyObject *m_compiled_format_dict_unpack_from(
-    struct compiled_format_dict_t *self_p,
-    PyObject *args_p,
-    PyObject *kwargs_p)
-{
-    PyObject *data_p;
-    PyObject *offset_p;
-    int res;
-    static char *keywords[] = {
-        "data",
-        "offset",
-        NULL
-    };
-
-    offset_p = mp_obj_new_int(0);;
-    res = PyArg_ParseTupleAndKeywords(args_p,
-                                      kwargs_p,
-                                      "O|O",
-                                      &keywords[0],
-                                      &data_p,
-                                      &offset_p);
-
-    if (res == 0) {
-        return (NULL);
-    }
-
-    return (unpack_from_dict(self_p->info_p, self_p->names_p, data_p, offset_p));
-}
-
 static PyObject *m_compiled_format_dict_calcsize(
     struct compiled_format_dict_t *self_p)
 {
@@ -1506,7 +1429,29 @@ mp_obj_t bitstruct_CompiledFormatDict_make_new(const mp_obj_type_t *type,
 STATIC void bitstruct_CompiledFormatDict_print(const mp_print_t *print,
                                                mp_obj_t self_in,mp_print_kind_t kind){
     bitstruct_CompiledFormatDict_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    mp_printf(print, "CompiledFormatDict()");
+    mp_printf(print, "CompiledFormat(bits=%d, fields=%d, padding_fields=%d, names=",
+              self->info_p->number_of_bits,
+              self->info_p->number_of_fields,
+              self->info_p->number_of_fields -
+              self->info_p->number_of_non_padding_fields);
+
+    if(self->names_p == mp_const_none){
+        mp_print_str(print, "None");
+    }else{
+        size_t len;
+        mp_obj_t* items;
+        mp_obj_list_get(self->names_p, &len, &items);
+
+        mp_print_str(print, "[");
+        if(len){
+            mp_printf(print, "%s", mp_obj_str_get_str(items[0]));
+            for(size_t i = 1; i < len; i++)
+                mp_printf(print, ", %s", mp_obj_str_get_str(items[i]));
+        }
+        mp_print_str(print, "]");
+    }
+
+    mp_print_str(print, ")");
 }
 
 /**
@@ -1516,8 +1461,9 @@ STATIC void bitstruct_CompiledFormatDict_print(const mp_print_t *print,
  */
 STATIC mp_obj_t bitstruct_CompiledFormatDict_pack(mp_obj_t self_in, mp_obj_t data){
     bitstruct_CompiledFormatDict_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    (void)self;
-    return mp_const_none;
+
+    // raises KeyError, MemoryError, NotImplementedError, OverflowError, ValueError
+    return pack_dict(self->info_p, self->names_p, data);
 }
 
 /**
@@ -1527,8 +1473,9 @@ STATIC mp_obj_t bitstruct_CompiledFormatDict_pack(mp_obj_t self_in, mp_obj_t dat
  */
 STATIC mp_obj_t bitstruct_CompiledFormatDict_unpack(mp_obj_t self_in, mp_obj_t data){
     bitstruct_CompiledFormatDict_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    (void)self;
-    return mp_const_none;
+
+    // raises MemoryError, OverflowError, TypeError, ValueError
+    return unpack_dict(self->info_p, self->names_p, data, 0);
 }
 
 /**
@@ -1541,8 +1488,9 @@ STATIC mp_obj_t bitstruct_CompiledFormatDict_unpack(mp_obj_t self_in, mp_obj_t d
  */
 STATIC mp_obj_t bitstruct_CompiledFormatDict_pack_into(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args){
     bitstruct_CompiledFormatDict_obj_t *self = MP_OBJ_TO_PTR(pos_args[0]);
-    (void)self;
-    return mp_const_none;
+
+    // raises KeyError, NotImplementedError, OverflowError, TypeError
+    return pack_into_dict(self->info_p, self->names_p, pos_args[1], 0, pos_args[2]);
 }
 
 /**
@@ -1553,8 +1501,14 @@ STATIC mp_obj_t bitstruct_CompiledFormatDict_pack_into(size_t n_args, const mp_o
  */
 STATIC mp_obj_t bitstruct_CompiledFormatDict_unpack_from(size_t n_args, const mp_obj_t *args){
     bitstruct_CompiledFormatDict_obj_t *self = MP_OBJ_TO_PTR(args[0]);
-    (void)self;
-    return mp_const_none;
+
+    // raises OverflowError
+    mp_obj_t offset = mp_obj_new_int(0);
+    if(n_args == 3)
+        offset = args[2];
+
+    // raises MemoryError, OverflowError, TypeError, ValueError
+    return unpack_from_dict(self->info_p, self->names_p, args[1], offset);
 }
 
 /**
