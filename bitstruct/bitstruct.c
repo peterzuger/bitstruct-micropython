@@ -744,45 +744,6 @@ static mp_obj_t pack_into(struct info_t *info_p,
     return pack_into_finalize(&bounds);
 }
 
-static PyObject *m_pack_into(PyObject *module_p,
-                             PyObject *args_p,
-                             PyObject *kwargs_p)
-{
-    PyObject *format_p;
-    PyObject *buf_p;
-    PyObject *offset_p;
-    PyObject *res_p;
-    Py_ssize_t number_of_args;
-    struct info_t *info_p;
-
-    number_of_args = PyTuple_GET_SIZE(args_p);
-
-    if (number_of_args < 3) {
-        PyErr_SetString(PyExc_ValueError, "Too few arguments.");
-
-        return (NULL);
-    }
-
-    format_p = PyTuple_GET_ITEM(args_p, 0);
-    buf_p = PyTuple_GET_ITEM(args_p, 1);
-    offset_p = PyTuple_GET_ITEM(args_p, 2);
-    info_p = parse_format(format_p);
-
-    if (info_p == NULL) {
-        return (NULL);
-    }
-
-    res_p = pack_into(info_p,
-                      buf_p,
-                      offset_p,
-                      args_p,
-                      3,
-                      number_of_args);
-    PyMem_RawFree(info_p);
-
-    return (res_p);
-}
-
 static mp_obj_t unpack_from(struct info_t *info_p,
                             mp_obj_t data_p,
                             mp_obj_t offset_p)
@@ -792,48 +753,6 @@ static mp_obj_t unpack_from(struct info_t *info_p,
     offset = parse_offset(offset_p);
 
     return unpack(info_p, data_p, offset);
-}
-
-static PyObject *m_unpack_from(PyObject *module_p,
-                               PyObject *args_p,
-                               PyObject *kwargs_p)
-{
-    PyObject *format_p;
-    PyObject *data_p;
-    PyObject *offset_p;
-    PyObject *unpacked_p;
-    struct info_t *info_p;
-    int res;
-    static char *keywords[] = {
-        "fmt",
-        "data",
-        "offset",
-        NULL
-    };
-
-    offset_p = mp_obj_new_int(0);
-    res = PyArg_ParseTupleAndKeywords(args_p,
-                                      kwargs_p,
-                                      "OO|O",
-                                      &keywords[0],
-                                      &format_p,
-                                      &data_p,
-                                      &offset_p);
-
-    if (res == 0) {
-        return (NULL);
-    }
-
-    info_p = parse_format(format_p);
-
-    if (info_p == NULL) {
-        return (NULL);
-    }
-
-    unpacked_p = unpack_from(info_p, data_p, offset_p);
-    PyMem_RawFree(info_p);
-
-    return (unpacked_p);
 }
 
 static void pack_dict_pack(struct info_t *info_p,
@@ -1506,7 +1425,22 @@ STATIC mp_obj_t bitstruct_unpack(mp_obj_t format, mp_obj_t data){
  * @param kwargs:
  */
 STATIC mp_obj_t bitstruct_pack_into(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args){
-    return mp_const_none;
+    mp_obj_t res_p;
+    struct info_t *info_p;
+
+    // raises MemoryError, NotImplementedError, TypeError, ValueError
+    info_p = parse_format(pos_args[0]);
+
+    // raises NotImplementedError, OverflowError, TypeError, ValueError
+    res_p = pack_into(info_p,
+                      pos_args[1],
+                      pos_args[2],
+                      pos_args[0],
+                      3,
+                      n_args);
+    m_free(info_p);
+
+    return res_p;
 }
 
 /**
@@ -1516,7 +1450,22 @@ STATIC mp_obj_t bitstruct_pack_into(size_t n_args, const mp_obj_t *pos_args, mp_
  * @param opt: offset = 0
  */
 STATIC mp_obj_t bitstruct_unpack_from(size_t n_args, const mp_obj_t *args){
-    return mp_const_none;
+    mp_obj_t unpacked_p;
+    struct info_t *info_p;
+
+    // raises OverflowError
+    mp_obj_t offset = mp_obj_new_int(0);
+    if(n_args == 3)
+        offset = args[2];
+
+    // raises MemoryError, NotImplementedError, TypeError, ValueError
+    info_p = parse_format(args[0]);
+
+    // raises MemoryError, OverflowError, TypeError, ValueError
+    unpacked_p = unpack_from(info_p, args[2], offset);
+    m_free(info_p);
+
+    return unpacked_p;
 }
 
 /**
