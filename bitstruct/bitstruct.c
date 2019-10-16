@@ -82,15 +82,13 @@ struct compiled_format_dict_t {
     PyObject *names_p;
 };
 
-static bool is_names_list(PyObject *names_p)
+/**
+ * @raises TypeError
+ */
+static void is_names_list(mp_obj_t names_p)
 {
-    if (!PyList_Check(names_p)) {
-        PyErr_SetString(PyExc_TypeError, "Names is not a list.");
-
-        return (false);
-    }
-
-    return (true);
+    if(!mp_obj_is_type(names_p, &mp_type_list))
+        mp_raise_TypeError("Names is not a list.");
 }
 
 static void pack_signed_integer(struct bitstream_writer_t *self_p,
@@ -1137,9 +1135,7 @@ static PyObject *m_pack_dict(PyObject *module_p, PyObject *args_p)
         return (NULL);
     }
 
-    if (!is_names_list(names_p)) {
-        return (NULL);
-    }
+    is_names_list(names_p);
 
     packed_p = pack_dict(info_p, names_p, data_p);
     PyMem_RawFree(info_p);
@@ -1230,9 +1226,7 @@ static PyObject *m_unpack_dict(PyObject *module_p, PyObject *args_p)
         return (NULL);
     }
 
-    if (!is_names_list(names_p)) {
-        return (NULL);
-    }
+    is_names_list(names_p);
 
     unpacked_p = unpack_dict(info_p, names_p, data_p, 0);
     PyMem_RawFree(info_p);
@@ -1319,9 +1313,7 @@ static PyObject *m_pack_into_dict(PyObject *module_p,
         return (NULL);
     }
 
-    if (!is_names_list(names_p)) {
-        return (NULL);
-    }
+    is_names_list(names_p);
 
     res_p = pack_into_dict(info_p, names_p, buf_p, offset_p, data_p);
     PyMem_RawFree(info_p);
@@ -1368,9 +1360,7 @@ static PyObject *m_unpack_from_dict(PyObject *module_p,
         return (NULL);
     }
 
-    if (!is_names_list(names_p)) {
-        return (NULL);
-    }
+    is_names_list(names_p);
 
     unpacked_p = unpack_from_dict(info_p, names_p, data_p, offset_p);
     PyMem_RawFree(info_p);
@@ -1665,9 +1655,7 @@ static PyObject *compiled_format_dict_new(PyTypeObject *subtype_p,
 {
     struct compiled_format_dict_t *self_p;
 
-    if (!is_names_list(names_p)) {
-        return (NULL);
-    }
+    is_names_list(names_p);
 
     self_p = (struct compiled_format_dict_t *)subtype_p->tp_alloc(subtype_p, 0);
 
