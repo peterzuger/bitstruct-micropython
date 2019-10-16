@@ -898,103 +898,6 @@ static mp_obj_t pack_into_dict(struct info_t *info_p,
     return pack_into_finalize(&bounds);
 }
 
-static PyObject *m_pack_into_dict(PyObject *module_p,
-                                  PyObject *args_p,
-                                  PyObject *kwargs_p)
-{
-    PyObject *format_p;
-    PyObject *names_p;
-    PyObject *buf_p;
-    PyObject *offset_p;
-    PyObject *data_p;
-    PyObject *res_p;
-    struct info_t *info_p;
-    int res;
-    static char *keywords[] = {
-        "fmt",
-        "names",
-        "buf",
-        "offset",
-        "data",
-        NULL
-    };
-
-    offset_p = mp_obj_new_int(0);;
-    res = PyArg_ParseTupleAndKeywords(args_p,
-                                      kwargs_p,
-                                      "OOOOO",
-                                      &keywords[0],
-                                      &format_p,
-                                      &names_p,
-                                      &buf_p,
-                                      &offset_p,
-                                      &data_p);
-
-    if (res == 0) {
-        return (NULL);
-    }
-
-    info_p = parse_format(format_p);
-
-    if (info_p == NULL) {
-        return (NULL);
-    }
-
-    is_names_list(names_p);
-
-    res_p = pack_into_dict(info_p, names_p, buf_p, offset_p, data_p);
-    PyMem_RawFree(info_p);
-
-    return (res_p);
-}
-
-static PyObject *m_unpack_from_dict(PyObject *module_p,
-                                    PyObject *args_p,
-                                    PyObject *kwargs_p)
-{
-    PyObject *format_p;
-    PyObject *names_p;
-    PyObject *data_p;
-    PyObject *offset_p;
-    PyObject *unpacked_p;
-    struct info_t *info_p;
-    int res;
-    static char *keywords[] = {
-        "fmt",
-        "names",
-        "data",
-        "offset",
-        NULL
-    };
-
-    offset_p = mp_obj_new_int(0);;
-    res = PyArg_ParseTupleAndKeywords(args_p,
-                                      kwargs_p,
-                                      "OOO|O",
-                                      &keywords[0],
-                                      &format_p,
-                                      &names_p,
-                                      &data_p,
-                                      &offset_p);
-
-    if (res == 0) {
-        return (NULL);
-    }
-
-    info_p = parse_format(format_p);
-
-    if (info_p == NULL) {
-        return (NULL);
-    }
-
-    is_names_list(names_p);
-
-    unpacked_p = unpack_from_dict(info_p, names_p, data_p, offset_p);
-    PyMem_RawFree(info_p);
-
-    return (unpacked_p);
-}
-
 static mp_obj_t calcsize(struct info_t *info_p)
 {
     // raises MemoryError, OverflowError
@@ -1466,7 +1369,20 @@ STATIC mp_obj_t bitstruct_unpack_dict(mp_obj_t format, mp_obj_t names, mp_obj_t 
  * @param kwargs:
  */
 STATIC mp_obj_t bitstruct_pack_into_dict(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args){
-    return mp_const_none;
+    mp_obj_t res_p;
+    struct info_t *info_p;
+
+    // raises MemoryError, NotImplementedError, TypeError, ValueError
+    info_p = parse_format(pos_args[0]);
+
+    // raises TypeError
+    is_names_list(pos_args[1]);
+
+    // raises KeyError, NotImplementedError, OverflowError, TypeError
+    res_p = pack_into_dict(info_p, pos_args[1], pos_args[2], pos_args[2], pos_args[3]);
+    m_free(info_p);
+
+    return res_p;
 }
 
 /**
@@ -1477,7 +1393,26 @@ STATIC mp_obj_t bitstruct_pack_into_dict(size_t n_args, const mp_obj_t *pos_args
  * @param opt: offset = 0
  */
 STATIC mp_obj_t bitstruct_unpack_from_dict(size_t n_args, const mp_obj_t *args){
-    return mp_const_none;
+    mp_obj_t unpacked_p;
+    struct info_t *info_p;
+
+    // raises OverflowError
+    mp_obj_t offset = mp_obj_new_int(0);
+
+    if(n_args == 4)
+        offset = args[3];
+
+    // raises MemoryError, NotImplementedError, TypeError, ValueError
+    info_p = parse_format(args[0]);
+
+    // raises TypeError
+    is_names_list(args[1]);
+
+    // raises MemoryError, OverflowError, TypeError, ValueError
+    unpacked_p = unpack_from_dict(info_p, args[1], args[2], offset);
+    m_free(info_p);
+
+    return unpacked_p;
 }
 
 /**
