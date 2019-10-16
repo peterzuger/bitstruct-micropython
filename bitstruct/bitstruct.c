@@ -303,7 +303,7 @@ static mp_obj_t unpack_padding(struct bitstream_reader_t *self_p,
     return mp_const_none;
 }
 
-static int field_info_init_signed(struct field_info_t *self_p,
+static void field_info_init_signed(struct field_info_t *self_p,
                                   int number_of_bits)
 {
     uint64_t limit;
@@ -312,28 +312,22 @@ static int field_info_init_signed(struct field_info_t *self_p,
     self_p->unpack = unpack_signed_integer;
 
     if (number_of_bits > 64) {
-        PyErr_SetString(PyExc_NotImplementedError,
-                        "Signed integer over 64 bits.");
-        return (-1);
+        mp_raise_NotImplementedError("Signed integer over 64 bits.");
     }
 
     limit = (1ull << (number_of_bits - 1));
     self_p->limits.s.lower = -limit;
     self_p->limits.s.upper = (limit - 1);
-
-    return (0);
 }
 
-static int field_info_init_unsigned(struct field_info_t *self_p,
+static void field_info_init_unsigned(struct field_info_t *self_p,
                                     int number_of_bits)
 {
     self_p->pack = pack_unsigned_integer;
     self_p->unpack = unpack_unsigned_integer;
 
     if (number_of_bits > 64) {
-        PyErr_SetString(PyExc_NotImplementedError,
-                        "Unsigned integer over 64 bits.");
-        return (-1);
+        mp_raise_NotImplementedError("Unsigned integer over 64 bits.");
     }
 
     if (number_of_bits < 64) {
@@ -341,11 +335,9 @@ static int field_info_init_unsigned(struct field_info_t *self_p,
     } else {
         self_p->limits.u.upper = (uint64_t)-1;
     }
-
-    return (0);
 }
 
-static int field_info_init_float(struct field_info_t *self_p,
+static void field_info_init_float(struct field_info_t *self_p,
                                  int number_of_bits)
 {
     switch (number_of_bits) {
@@ -356,78 +348,59 @@ static int field_info_init_float(struct field_info_t *self_p,
         break;
 
     default:
-        PyErr_SetString(PyExc_NotImplementedError, "Float not 32 bits.");
-        return (-1);
+        mp_raise_NotImplementedError("Float not 32 bits.");
     }
-
-    return (0);
 }
 
-static int field_info_init_bool(struct field_info_t *self_p,
+static void field_info_init_bool(struct field_info_t *self_p,
                                 int number_of_bits)
 {
     self_p->pack = pack_bool;
     self_p->unpack = unpack_bool;
 
     if (number_of_bits > 64) {
-        PyErr_SetString(PyExc_NotImplementedError, "Bool over 64 bits.");
-        return (-1);
+        mp_raise_NotImplementedError("Bool over 64 bits.");
     }
-
-    return (0);
 }
 
-static int field_info_init_text(struct field_info_t *self_p,
+static void field_info_init_text(struct field_info_t *self_p,
                                 int number_of_bits)
 {
     self_p->pack = pack_text;
     self_p->unpack = unpack_text;
 
     if ((number_of_bits % 8) != 0) {
-        PyErr_SetString(PyExc_NotImplementedError,
-                        "Text not multiple of 8 bits.");
-        return (-1);
+        mp_raise_NotImplementedError("Text not multiple of 8 bits.");
     }
-
-    return (0);
 }
 
-static int field_info_init_raw(struct field_info_t *self_p,
+static void field_info_init_raw(struct field_info_t *self_p,
                                int number_of_bits)
 {
     self_p->pack = pack_raw;
     self_p->unpack = unpack_raw;
 
     if ((number_of_bits % 8) != 0) {
-        PyErr_SetString(PyExc_NotImplementedError,
-                        "Raw not multiple of 8 bits.");
-        return (-1);
+        mp_raise_NotImplementedError("Raw not multiple of 8 bits.");
     }
-
-    return (0);
 }
 
-static int field_info_init_zero_padding(struct field_info_t *self_p)
+static void field_info_init_zero_padding(struct field_info_t *self_p)
 {
     self_p->pack = pack_zero_padding;
     self_p->unpack = unpack_padding;
-
-    return (0);
 }
 
-static int field_info_init_one_padding(struct field_info_t *self_p)
+static void field_info_init_one_padding(struct field_info_t *self_p)
 {
     self_p->pack = pack_one_padding;
     self_p->unpack = unpack_padding;
-
-    return (0);
 }
 
-static int field_info_init(struct field_info_t *self_p,
-                           int kind,
-                           int number_of_bits)
+static void field_info_init(struct field_info_t *self_p,
+                            int kind,
+                            int number_of_bits)
 {
-    int res;
     bool is_padding;
 
     is_padding = false;
@@ -435,49 +408,46 @@ static int field_info_init(struct field_info_t *self_p,
     switch (kind) {
 
     case 's':
-        res = field_info_init_signed(self_p, number_of_bits);
+        field_info_init_signed(self_p, number_of_bits);
         break;
 
     case 'u':
-        res = field_info_init_unsigned(self_p, number_of_bits);
+        field_info_init_unsigned(self_p, number_of_bits);
         break;
 
     case 'f':
-        res = field_info_init_float(self_p, number_of_bits);
+        field_info_init_float(self_p, number_of_bits);
         break;
 
     case 'b':
-        res = field_info_init_bool(self_p, number_of_bits);
+        field_info_init_bool(self_p, number_of_bits);
         break;
 
     case 't':
-        res = field_info_init_text(self_p, number_of_bits);
+        field_info_init_text(self_p, number_of_bits);
         break;
 
     case 'r':
-        res = field_info_init_raw(self_p, number_of_bits);
+        field_info_init_raw(self_p, number_of_bits);
         break;
 
     case 'p':
         is_padding = true;
-        res = field_info_init_zero_padding(self_p);
+        field_info_init_zero_padding(self_p);
         break;
 
     case 'P':
         is_padding = true;
-        res = field_info_init_one_padding(self_p);
+        field_info_init_one_padding(self_p);
         break;
 
     default:
-        PyErr_Format(PyExc_ValueError, "Bad format field type '%c'.", kind);
-        res = -1;
+        mp_raise_ValueError("Bad format field.");
         break;
     }
 
     self_p->number_of_bits = number_of_bits;
     self_p->is_padding = is_padding;
-
-    return (res);
 }
 
 static int count_number_of_fields(const char *format_p,
@@ -576,13 +546,14 @@ static struct info_t *parse_format(PyObject *format_obj_p)
             return (NULL);
         }
 
-        res = field_info_init(&info_p->fields[i], kind, number_of_bits);
+        // raises NotImplementedError, ValueError
+        field_info_init(&info_p->fields[i], kind, number_of_bits);
 
-        if (res != 0) {
-            PyMem_RawFree(info_p);
+        /* if (res != 0) { */
+        /*     PyMem_RawFree(info_p); */
 
-            return (NULL);
-        }
+        /*     return (NULL); */
+        /* } */
 
         info_p->number_of_bits += number_of_bits;
     }
