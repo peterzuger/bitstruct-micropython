@@ -889,56 +889,62 @@ static PyObject *m_unpack_from(PyObject *module_p,
 }
 
 static void pack_dict_pack(struct info_t *info_p,
-                           PyObject *names_p,
-                           PyObject *data_p,
+                           mp_obj_t names_p,
+                           mp_obj_t data_p,
                            struct bitstream_writer_t *writer_p)
 {
-    PyObject *value_p;
+    mp_obj_t value_p;
     int i;
     int consumed_args;
     struct field_info_t *field_p;
 
     consumed_args = 0;
 
+    size_t len;
+    mp_obj_t* items;
+    mp_obj_list_get(names_p, &len, &items);
+
     for (i = 0; i < info_p->number_of_fields; i++) {
         field_p = &info_p->fields[i];
 
         if (field_p->is_padding) {
-            value_p = NULL;
+            value_p = mp_const_none;
         } else {
-            value_p = PyDict_GetItem(data_p,
-                                     PyList_GET_ITEM(names_p, consumed_args));
+            // raises KeyError
+            value_p = mp_obj_dict_get(data_p, items[consumed_args]);
             consumed_args++;
 
-            if (value_p == NULL) {
-                PyErr_SetString(PyExc_KeyError, "Missing value.");
+            if (value_p == mp_const_none) {
+                mp_raise_msg(&mp_type_KeyError, "Missing value.");
                 break;
             }
         }
 
+        // raises NotImplementedError, OverflowError, TypeError
         info_p->fields[i].pack(writer_p, value_p, field_p);
     }
 }
 
-static PyObject *pack_dict(struct info_t *info_p,
-                           PyObject *names_p,
-                           PyObject *data_p)
+static mp_obj_t pack_dict(struct info_t *info_p,
+                          mp_obj_t names_p,
+                          mp_obj_t data_p)
 {
     struct bitstream_writer_t writer;
-    PyObject *packed_p;
+    mp_obj_t packed_p;
 
-    if (PyList_GET_SIZE(names_p) < info_p->number_of_non_padding_fields) {
-        PyErr_SetString(PyExc_ValueError, "Too few names.");
 
-        return (NULL);
+    if (((mp_obj_list_t*)MP_OBJ_TO_PTR(names_p))->len < info_p->number_of_non_padding_fields) {
+        mp_raise_ValueError("Too few names.");
     }
 
+    // raises MemoryError
     packed_p = pack_prepare(info_p, &writer);
 
-    if (packed_p == NULL) {
-        return (NULL);
+    if (packed_p == mp_const_none) {
+        return mp_const_none;
     }
 
+    // raises KeyError, NotImplementedError, OverflowError, TypeError
     pack_dict_pack(info_p, names_p, data_p, &writer);
 
     return packed_p;
