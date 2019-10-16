@@ -296,7 +296,7 @@ static mp_obj_t unpack_padding(struct bitstream_reader_t *self_p,
 }
 
 static void field_info_init_signed(struct field_info_t *self_p,
-                                  int number_of_bits)
+                                   int number_of_bits)
 {
     uint64_t limit;
 
@@ -313,7 +313,7 @@ static void field_info_init_signed(struct field_info_t *self_p,
 }
 
 static void field_info_init_unsigned(struct field_info_t *self_p,
-                                    int number_of_bits)
+                                     int number_of_bits)
 {
     self_p->pack = pack_unsigned_integer;
     self_p->unpack = unpack_unsigned_integer;
@@ -330,7 +330,7 @@ static void field_info_init_unsigned(struct field_info_t *self_p,
 }
 
 static void field_info_init_float(struct field_info_t *self_p,
-                                 int number_of_bits)
+                                  int number_of_bits)
 {
     switch (number_of_bits) {
 
@@ -345,7 +345,7 @@ static void field_info_init_float(struct field_info_t *self_p,
 }
 
 static void field_info_init_bool(struct field_info_t *self_p,
-                                int number_of_bits)
+                                 int number_of_bits)
 {
     self_p->pack = pack_bool;
     self_p->unpack = unpack_bool;
@@ -356,7 +356,7 @@ static void field_info_init_bool(struct field_info_t *self_p,
 }
 
 static void field_info_init_text(struct field_info_t *self_p,
-                                int number_of_bits)
+                                 int number_of_bits)
 {
     self_p->pack = pack_text;
     self_p->unpack = unpack_text;
@@ -367,7 +367,7 @@ static void field_info_init_text(struct field_info_t *self_p,
 }
 
 static void field_info_init_raw(struct field_info_t *self_p,
-                               int number_of_bits)
+                                int number_of_bits)
 {
     self_p->pack = pack_raw;
     self_p->unpack = unpack_raw;
@@ -675,10 +675,10 @@ static long parse_offset(PyObject *offset_p)
 }
 
 static void pack_into_prepare(struct info_t *info_p,
-                             mp_obj_t buf_p,
-                             mp_obj_t offset_p,
-                             struct bitstream_writer_t *writer_p,
-                             struct bitstream_writer_bounds_t *bounds_p)
+                              mp_obj_t buf_p,
+                              mp_obj_t offset_p,
+                              struct bitstream_writer_t *writer_p,
+                              struct bitstream_writer_bounds_t *bounds_p)
 {
     uint8_t *packed_p;
     size_t size;
