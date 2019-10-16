@@ -1192,23 +1192,6 @@ static mp_obj_t calcsize(struct info_t *info_p)
     return mp_obj_new_int_from_ll(info_p->number_of_bits);
 }
 
-static PyObject *m_calcsize(PyObject *module_p, PyObject *format_p)
-{
-    PyObject *size_p;
-    struct info_t *info_p;
-
-    info_p = parse_format(format_p);
-
-    if (info_p == NULL) {
-        return (NULL);
-    }
-
-    size_p = calcsize(info_p);
-    PyMem_RawFree(info_p);
-
-    return (size_p);
-}
-
 static PyObject *m_byteswap(PyObject *module_p, PyObject *args_p)
 {
     PyObject *format_p;
@@ -1911,7 +1894,14 @@ STATIC mp_obj_t bitstruct_unpack_from_dict(size_t n_args, const mp_obj_t *args){
  * @param fmt
  */
 STATIC mp_obj_t bitstruct_calcsize(mp_obj_t format){
-    return mp_const_none;
+    // raises MemoryError, NotImplementedError, TypeError, ValueError
+    struct info_t *info_p = parse_format(format_p);
+
+    // raises MemoryError, OverflowError
+    size_p = calcsize(info_p);
+    m_free(info_p);
+
+    return size_p;
 }
 
 /**
