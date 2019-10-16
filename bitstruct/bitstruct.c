@@ -1192,115 +1192,6 @@ static mp_obj_t calcsize(struct info_t *info_p)
     return mp_obj_new_int_from_ll(info_p->number_of_bits);
 }
 
-static PyObject *m_byteswap(PyObject *module_p, PyObject *args_p)
-{
-    PyObject *format_p;
-    PyObject *data_p;
-    PyObject *swapped_p;
-    const char *c_format_p;
-    uint8_t *src_p;
-    uint8_t *dst_p;
-    Py_ssize_t size;
-    int res;
-    int offset;
-
-    res = PyArg_ParseTuple(args_p, "OO", &format_p, &data_p);
-
-    if (res == 0) {
-        return (NULL);
-    }
-
-    c_format_p = PyUnicode_AsUTF8(format_p);
-
-    if (c_format_p == NULL) {
-        return (NULL);
-    }
-
-    res = PyBytes_AsStringAndSize(data_p, (char **)&src_p, &size);
-
-    if (res == -1) {
-        return (NULL);
-    }
-
-    swapped_p = PyBytes_FromStringAndSize(NULL, size);
-
-    if (swapped_p == NULL) {
-        return (NULL);
-    }
-
-    dst_p = (uint8_t *)PyBytes_AS_STRING(swapped_p);
-    offset = 0;
-
-    while (*c_format_p != '\0') {
-        switch (*c_format_p) {
-
-        case '1':
-            if ((size - offset) < 1) {
-                goto out1;
-            }
-
-            dst_p[offset] = src_p[offset];
-            offset += 1;
-            break;
-
-        case '2':
-            if ((size - offset) < 2) {
-                goto out1;
-            }
-
-            dst_p[offset + 0] = src_p[offset + 1];
-            dst_p[offset + 1] = src_p[offset + 0];
-            offset += 2;
-            break;
-
-        case '4':
-            if ((size - offset) < 4) {
-                goto out1;
-            }
-
-            dst_p[offset + 0] = src_p[offset + 3];
-            dst_p[offset + 1] = src_p[offset + 2];
-            dst_p[offset + 2] = src_p[offset + 1];
-            dst_p[offset + 3] = src_p[offset + 0];
-            offset += 4;
-            break;
-
-        case '8':
-            if ((size - offset) < 8) {
-                goto out1;
-            }
-
-            dst_p[offset + 0] = src_p[offset + 7];
-            dst_p[offset + 1] = src_p[offset + 6];
-            dst_p[offset + 2] = src_p[offset + 5];
-            dst_p[offset + 3] = src_p[offset + 4];
-            dst_p[offset + 4] = src_p[offset + 3];
-            dst_p[offset + 5] = src_p[offset + 2];
-            dst_p[offset + 6] = src_p[offset + 1];
-            dst_p[offset + 7] = src_p[offset + 0];
-            offset += 8;
-            break;
-
-        default:
-            PyErr_Format(PyExc_ValueError,
-                         "Expected 1, 2, 4 or 8, but got %c.",
-                         (char)*c_format_p);
-            goto out2;
-        }
-
-        c_format_p++;
-    }
-
-    return (swapped_p);
-
- out1:
-    PyErr_SetString(PyExc_ValueError, "Out of data to swap.");
-
- out2:
-
-    return (NULL);
-}
-
 static PyObject *compiled_format_new(PyTypeObject *subtype_p,
                                      PyObject *format_p)
 {
@@ -1911,6 +1802,90 @@ STATIC mp_obj_t bitstruct_calcsize(mp_obj_t format){
  * @param opt: offset = 0
  */
 STATIC mp_obj_t bitstruct_byteswap(size_t n_args, const mp_obj_t *args){
+    const char *c_format_p;
+    uint8_t *src_p;
+    uint8_t *dst_p;
+    size_t size;
+    int offset = 0;
+
+    if(n_args == 3){
+        // raises TypeError
+        offset = mp_obj_get_int(args[2]);
+    }
+
+    // raises TypeError
+    c_format_p = mp_obj_str_get_str(args[0]);
+
+    // raises TypeError
+    src_p = (uint8_t*)mp_obj_str_get_data(args[1], &size);
+
+    // raises MemoryError
+    dst_p = alloca(size);
+
+    while (*c_format_p != '\0') {
+        switch (*c_format_p) {
+
+        case '1':
+            if ((size - offset) < 1) {
+                goto out1;
+            }
+
+            dst_p[offset] = src_p[offset];
+            offset += 1;
+            break;
+
+        case '2':
+            if ((size - offset) < 2) {
+                goto out1;
+            }
+
+            dst_p[offset + 0] = src_p[offset + 1];
+            dst_p[offset + 1] = src_p[offset + 0];
+            offset += 2;
+            break;
+
+        case '4':
+            if ((size - offset) < 4) {
+                goto out1;
+            }
+
+            dst_p[offset + 0] = src_p[offset + 3];
+            dst_p[offset + 1] = src_p[offset + 2];
+            dst_p[offset + 2] = src_p[offset + 1];
+            dst_p[offset + 3] = src_p[offset + 0];
+            offset += 4;
+            break;
+
+        case '8':
+            if ((size - offset) < 8) {
+                goto out1;
+            }
+
+            dst_p[offset + 0] = src_p[offset + 7];
+            dst_p[offset + 1] = src_p[offset + 6];
+            dst_p[offset + 2] = src_p[offset + 5];
+            dst_p[offset + 3] = src_p[offset + 4];
+            dst_p[offset + 4] = src_p[offset + 3];
+            dst_p[offset + 5] = src_p[offset + 2];
+            dst_p[offset + 6] = src_p[offset + 1];
+            dst_p[offset + 7] = src_p[offset + 0];
+            offset += 8;
+            break;
+
+        default:
+            mp_raise_ValueError("Expected 1, 2, 4 or 8, but got c.");
+            return mp_const_none;
+        }
+
+        c_format_p++;
+    }
+
+    // raises MemoryError
+    mp_obj_t swapped_p = mp_obj_new_bytes(dst_p, size);
+    return (swapped_p);
+
+out1:
+    mp_raise_ValueError("Out of data to swap.");
     return mp_const_none;
 }
 
