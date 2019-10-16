@@ -207,80 +207,74 @@ static mp_obj_t unpack_bool(struct bitstream_reader_t *self_p,
 }
 
 static void pack_text(struct bitstream_writer_t *self_p,
-                      PyObject *value_p,
+                      mp_obj_t value_p,
                       struct field_info_t *field_info_p)
 {
-    Py_ssize_t size;
+    size_t size;
     const char* buf_p;
 
-    buf_p = PyUnicode_AsUTF8AndSize(value_p, &size);
+    buf_p = mp_obj_str_get_data(value_p, &size);
 
-    if (buf_p != NULL) {
-        if (size < (field_info_p->number_of_bits / 8)) {
-            PyErr_SetString(PyExc_NotImplementedError, "Short text.");
-        } else {
-            bitstream_writer_write_bytes(self_p,
-                                         (uint8_t *)buf_p,
-                                         field_info_p->number_of_bits / 8);
-        }
+    if (size < (field_info_p->number_of_bits / 8)) {
+        mp_raise_NotImplementedError("Short text.");
+    } else {
+        bitstream_writer_write_bytes(self_p,
+                                     (uint8_t *)buf_p,
+                                     field_info_p->number_of_bits / 8);
     }
 }
 
-static PyObject *unpack_text(struct bitstream_reader_t *self_p,
-                             struct field_info_t *field_info_p)
-{
-    uint8_t *buf_p;
-    PyObject *value_p;
-    int number_of_bytes;
-
-    number_of_bytes = (field_info_p->number_of_bits / 8);
-    buf_p = PyMem_RawMalloc(number_of_bytes);
-
-    if (buf_p == NULL) {
-        return (NULL);
-    }
-
-    bitstream_reader_read_bytes(self_p, buf_p, number_of_bytes);
-    value_p = PyUnicode_FromStringAndSize((const char *)buf_p, number_of_bytes);
-    PyMem_RawFree(buf_p);
-
-    return (value_p);
-}
-
-static void pack_raw(struct bitstream_writer_t *self_p,
-                     PyObject *value_p,
-                     struct field_info_t *field_info_p)
-{
-    Py_ssize_t size;
-    char* buf_p;
-    int res;
-
-    res = PyBytes_AsStringAndSize(value_p, &buf_p, &size);
-
-    if (res != -1) {
-        if (size < (field_info_p->number_of_bits / 8)) {
-            PyErr_SetString(PyExc_NotImplementedError, "Short raw data.");
-        } else {
-            bitstream_writer_write_bytes(self_p,
-                                         (uint8_t *)buf_p,
-                                         field_info_p->number_of_bits / 8);
-        }
-    }
-}
-
-static PyObject *unpack_raw(struct bitstream_reader_t *self_p,
+static mp_obj_t unpack_text(struct bitstream_reader_t *self_p,
                             struct field_info_t *field_info_p)
 {
     uint8_t *buf_p;
-    PyObject *value_p;
+    mp_obj_t value_p;
     int number_of_bytes;
 
     number_of_bytes = (field_info_p->number_of_bits / 8);
-    value_p = PyBytes_FromStringAndSize(NULL, number_of_bytes);
-    buf_p = (uint8_t *)PyBytes_AS_STRING(value_p);
+    buf_p = alloca(number_of_bytes);
+
+    bitstream_reader_read_bytes(self_p, buf_p, number_of_bytes);
+    value_p = mp_obj_new_str((const char *)buf_p, number_of_bytes);
+
+    return value_p;
+}
+
+static void pack_raw(struct bitstream_writer_t *self_p,
+                     mp_obj_t value_p,
+                     struct field_info_t *field_info_p)
+{
+    size_t size;
+    char* buf_p;
+    int res;
+
+    buf_p = (char*)mp_obj_str_get_data(value_p, &size);
+
+    if (size < (field_info_p->number_of_bits / 8)) {
+        mp_raise_NotImplementedError("Short raw data.");
+    } else {
+        bitstream_writer_write_bytes(self_p,
+                                     (uint8_t *)buf_p,
+                                     field_info_p->number_of_bits / 8);
+    }
+}
+
+static mp_obj_t unpack_raw(struct bitstream_reader_t *self_p,
+                           struct field_info_t *field_info_p)
+{
+    uint8_t *buf_p;
+    mp_obj_t value_p;
+    int number_of_bytes;
+
+    number_of_bytes = (field_info_p->number_of_bits / 8);
+
+    buf_p = alloca(number_of_bytes);
+
     bitstream_reader_read_bytes(self_p, buf_p, number_of_bytes);
 
-    return (value_p);
+    value_p = mp_obj_new_bytes(buf_p, number_of_bytes);
+
+    return value_p;
 }
 
 static void pack_zero_padding(struct bitstream_writer_t *self_p,
