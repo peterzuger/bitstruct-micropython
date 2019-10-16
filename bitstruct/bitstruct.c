@@ -549,11 +549,11 @@ static struct info_t *parse_format(PyObject *format_obj_p)
 }
 
 static void pack_pack(struct info_t *info_p,
-                      PyObject *args_p,
+                      const mp_obj_t* args_p,
                       int consumed_args,
                       struct bitstream_writer_t *writer_p)
 {
-    PyObject *value_p;
+    mp_obj_t value_p;
     int i;
     struct field_info_t *field_p;
 
@@ -561,65 +561,51 @@ static void pack_pack(struct info_t *info_p,
         field_p = &info_p->fields[i];
 
         if (field_p->is_padding) {
-            value_p = NULL;
+            value_p = mp_const_none;
         } else {
-            value_p = PyTuple_GET_ITEM(args_p, consumed_args);
+            value_p = args_p[consumed_args];
             consumed_args++;
         }
 
+        // raises NotImplementedError, OverflowError, TypeError
         info_p->fields[i].pack(writer_p, value_p, field_p);
     }
 }
 
-static PyObject *pack_prepare(struct info_t *info_p,
-                              struct bitstream_writer_t *writer_p)
+static uint8_t* pack_prepare(struct info_t *info_p,
+                             struct bitstream_writer_t *writer_p)
 {
-    PyObject *packed_p;
+    uint8_t* data;
 
-    packed_p = PyBytes_FromStringAndSize(NULL, (info_p->number_of_bits + 7) / 8);
+    // raises MemoryError
+    data = m_new(uint8_t, (info_p->number_of_bits + 7) / 8);
 
-    if (packed_p == NULL) {
-        return (NULL);
-    }
+    bitstream_writer_init(writer_p, data);
 
-    bitstream_writer_init(writer_p, (uint8_t *)PyBytes_AS_STRING(packed_p));
-
-    return (packed_p);
+    return data;
 }
 
-static PyObject *pack_finalize(PyObject *packed_p)
-{
-    if (PyErr_Occurred() != NULL) {
-        Py_DECREF(packed_p);
-        packed_p = NULL;
-    }
-
-    return (packed_p);
-}
-
-static PyObject *pack(struct info_t *info_p,
-                      PyObject *args_p,
-                      int consumed_args,
-                      Py_ssize_t number_of_args)
+static mp_obj_t pack(struct info_t *info_p,
+                     const mp_obj_t* args_p,
+                     int consumed_args,
+                     size_t number_of_args)
 {
     struct bitstream_writer_t writer;
-    PyObject *packed_p;
 
     if (number_of_args < info_p->number_of_non_padding_fields) {
-        PyErr_SetString(PyExc_ValueError, "Too few arguments.");
-
-        return (NULL);
+        mp_raise_ValueError("Too few arguments.");
     }
 
-    packed_p = pack_prepare(info_p, &writer);
+    uint8_t* data = pack_prepare(info_p, &writer);
 
-    if (packed_p == NULL) {
-        return (NULL);
-    }
-
+    // raises NotImplementedError, OverflowError, TypeError
     pack_pack(info_p, args_p, consumed_args, &writer);
 
-    return (pack_finalize(packed_p));
+    // raises MemoryError
+    mp_obj_t packed_p = mp_obj_new_bytes(data, (info_p->number_of_bits + 7) / 8);
+    m_free(data);
+
+    return packed_p;
 }
 
 static PyObject *m_pack(PyObject *module_p, PyObject *args_p)
@@ -984,7 +970,7 @@ static PyObject *pack_dict(struct info_t *info_p,
 
     pack_dict_pack(info_p, names_p, data_p, &writer);
 
-    return (pack_finalize(packed_p));
+    return packed_p;
 }
 
 static PyObject *m_pack_dict(PyObject *module_p, PyObject *args_p)
