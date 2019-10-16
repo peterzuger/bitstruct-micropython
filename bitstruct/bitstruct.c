@@ -189,20 +189,21 @@ static mp_obj_t unpack_float_32(struct bitstream_reader_t *self_p,
 }
 
 static void pack_bool(struct bitstream_writer_t *self_p,
-                      PyObject *value_p,
+                      mp_obj_t value_p,
                       struct field_info_t *field_info_p)
 {
     bitstream_writer_write_u64_bits(self_p,
-                                    PyObject_IsTrue(value_p),
+                                    mp_obj_is_true(value_p),
                                     field_info_p->number_of_bits);
 }
 
-static PyObject *unpack_bool(struct bitstream_reader_t *self_p,
-                             struct field_info_t *field_info_p)
+static mp_obj_t unpack_bool(struct bitstream_reader_t *self_p,
+                            struct field_info_t *field_info_p)
 {
-    return (PyBool_FromLong((long)bitstream_reader_read_u64_bits(
-                                self_p,
-                                field_info_p->number_of_bits)));
+    return ((long)bitstream_reader_read_u64_bits(
+                self_p,
+                field_info_p->number_of_bits))
+        ? mp_const_true : mp_const_false;
 }
 
 static void pack_text(struct bitstream_writer_t *self_p,
