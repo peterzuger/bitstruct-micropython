@@ -979,66 +979,53 @@ static PyObject *m_pack_dict(PyObject *module_p, PyObject *args_p)
     return (packed_p);
 }
 
-static PyObject *unpack_dict(struct info_t *info_p,
-                             PyObject *names_p,
-                             PyObject *data_p,
-                             long offset)
+static mp_obj_t unpack_dict(struct info_t *info_p,
+                            mp_obj_t names_p,
+                            mp_obj_t data_p,
+                            long offset)
 {
     struct bitstream_reader_t reader;
-    PyObject *unpacked_p;
-    PyObject *value_p;
+    mp_obj_t unpacked_p;
+    mp_obj_t value_p;
     char *packed_p;
     int i;
-    Py_ssize_t size;
-    int res;
+    size_t size;
     int produced_args;
 
-    if (PyList_GET_SIZE(names_p) < info_p->number_of_non_padding_fields) {
-        PyErr_SetString(PyExc_ValueError, "Too few names.");
-
-        return (NULL);
+    if (((mp_obj_list_t*)MP_OBJ_TO_PTR(names_p))->len < info_p->number_of_non_padding_fields) {
+        mp_raise_ValueError("Too few names.");
     }
 
-    unpacked_p = PyDict_New();
+    // raises MemoryError
+    unpacked_p = mp_obj_new_dict(0);
 
-    if (unpacked_p == NULL) {
-        return (NULL);
-    }
-
-    res = PyBytes_AsStringAndSize(data_p, &packed_p, &size);
-
-    if (res == -1) {
-        goto out1;
-    }
+    // raises TypeError
+    packed_p = (char*)mp_obj_str_get_data(data_p, &size);
 
     if (size < ((info_p->number_of_bits + offset + 7) / 8)) {
-        PyErr_SetString(PyExc_ValueError, "Short data.");
-
-        goto out1;
+        mp_raise_ValueError("Short data.");
     }
 
     bitstream_reader_init(&reader, (uint8_t *)packed_p);
     bitstream_reader_seek(&reader, offset);
     produced_args = 0;
 
+    size_t len;
+    mp_obj_t* names;
+    mp_obj_list_get(names_p, &len, &names);
+
     for (i = 0; i < info_p->number_of_fields; i++) {
+        // raises MemoryError, OverflowError
         value_p = info_p->fields[i].unpack(&reader, &info_p->fields[i]);
 
-        if (value_p != NULL) {
-            PyDict_SetItem(unpacked_p,
-                           PyList_GET_ITEM(names_p, produced_args),
-                           value_p);
+        if (value_p != mp_const_none) {
+            // raises MemoryError
+            mp_obj_dict_store(unpacked_p, names[produced_args], value_p);
             produced_args++;
         }
     }
 
- out1:
-    if (PyErr_Occurred() != NULL) {
-        Py_DECREF(unpacked_p);
-        unpacked_p = NULL;
-    }
-
-    return (unpacked_p);
+    return unpacked_p;
 }
 
 static PyObject *m_unpack_dict(PyObject *module_p, PyObject *args_p)
