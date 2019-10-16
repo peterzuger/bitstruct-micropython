@@ -133,6 +133,7 @@ static void pack_unsigned_integer(struct bitstream_writer_t *self_p,
 {
     uint64_t value;
 
+    // raises TypeError
     value = mp_obj_get_int(value_p);
 
     if (value > field_info_p->limits.u.upper) {
@@ -163,6 +164,7 @@ static void pack_float_32(struct bitstream_writer_t *self_p,
     mp_float_t value;
     uint32_t data;
 
+    // raises TypeError
     value = mp_obj_get_float(value_p);
     memcpy(&data, &value, sizeof(data));
     bitstream_writer_write_u32(self_p, data);
@@ -205,6 +207,7 @@ static void pack_text(struct bitstream_writer_t *self_p,
     size_t size;
     const char* buf_p;
 
+    // raises TypeError
     buf_p = mp_obj_str_get_data(value_p, &size);
 
     if (size < (field_info_p->number_of_bits / 8)) {
@@ -227,6 +230,8 @@ static mp_obj_t unpack_text(struct bitstream_reader_t *self_p,
     buf_p = alloca(number_of_bytes);
 
     bitstream_reader_read_bytes(self_p, buf_p, number_of_bytes);
+
+    // raises MemoryError
     value_p = mp_obj_new_str((const char *)buf_p, number_of_bytes);
 
     return value_p;
@@ -239,6 +244,7 @@ static void pack_raw(struct bitstream_writer_t *self_p,
     size_t size;
     char* buf_p;
 
+    // raises TypeError
     buf_p = (char*)mp_obj_str_get_data(value_p, &size);
 
     if (size < (field_info_p->number_of_bits / 8)) {
@@ -263,6 +269,7 @@ static mp_obj_t unpack_raw(struct bitstream_reader_t *self_p,
 
     bitstream_reader_read_bytes(self_p, buf_p, number_of_bytes);
 
+    // raises MemoryError
     value_p = mp_obj_new_bytes(buf_p, number_of_bytes);
 
     return value_p;
@@ -399,36 +406,44 @@ static void field_info_init(struct field_info_t *self_p,
     switch (kind) {
 
     case 's':
+        // raises NotImplementedError
         field_info_init_signed(self_p, number_of_bits);
         break;
 
     case 'u':
+        // raises NotImplementedError
         field_info_init_unsigned(self_p, number_of_bits);
         break;
 
     case 'f':
+        // raises NotImplementedError
         field_info_init_float(self_p, number_of_bits);
         break;
 
     case 'b':
+        // raises NotImplementedError
         field_info_init_bool(self_p, number_of_bits);
         break;
 
     case 't':
+        // raises NotImplementedError
         field_info_init_text(self_p, number_of_bits);
         break;
 
     case 'r':
+        // raises NotImplementedError
         field_info_init_raw(self_p, number_of_bits);
         break;
 
     case 'p':
         is_padding = true;
+        // raises NotImplementedError
         field_info_init_zero_padding(self_p);
         break;
 
     case 'P':
         is_padding = true;
+        // raises NotImplementedError
         field_info_init_one_padding(self_p);
         break;
 
@@ -530,6 +545,7 @@ static struct info_t *parse_format(mp_obj_t format_obj_p)
         info_p->number_of_bits += number_of_bits;
     }
 
+    // raises MemoryError
     struct info_t* n_info_p = m_malloc(size);
     memcpy(n_info_p, info_p, size);
 
@@ -584,6 +600,7 @@ static mp_obj_t pack(struct info_t *info_p,
         mp_raise_ValueError("Too few arguments.");
     }
 
+    // raises MemoryError
     uint8_t* data = pack_prepare(info_p, &writer);
 
     // raises NotImplementedError, OverflowError, TypeError
@@ -657,6 +674,7 @@ static long parse_offset(mp_obj_t offset_p)
 {
     unsigned long offset;
 
+    // raises TypeError
     offset = mp_obj_get_int(offset_p);
 
     if (offset == (unsigned long)-1) {
@@ -738,8 +756,10 @@ static mp_obj_t unpack_from(struct info_t *info_p,
 {
     long offset;
 
+    // raises TypeError, ValueError
     offset = parse_offset(offset_p);
 
+    // raises MemoryError, OverflowError, TypeError, ValueError
     return unpack(info_p, data_p, offset);
 }
 
@@ -1011,6 +1031,7 @@ mp_obj_t bitstruct_CompiledFormat_make_new(const mp_obj_type_t *type,
                                            const mp_obj_t *args){
     mp_arg_check_num(n_args, n_kw, 1, 1, false);
 
+    // raises MemoryError
     bitstruct_CompiledFormat_obj_t *self = m_new_obj(bitstruct_CompiledFormat_obj_t);
 
     self->base.type = &bitstruct_CompiledFormat_type;
@@ -1099,6 +1120,7 @@ mp_obj_t bitstruct_CompiledFormatDict_make_new(const mp_obj_type_t *type,
                                                const mp_obj_t *args){
     mp_arg_check_num(n_args, n_kw, 1, 2, true);
 
+    // raises MemoryError
     bitstruct_CompiledFormatDict_obj_t *self = m_new_obj(bitstruct_CompiledFormatDict_obj_t);
 
     self->base.type = &bitstruct_CompiledFormatDict_type;
