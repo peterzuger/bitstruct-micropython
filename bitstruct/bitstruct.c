@@ -608,32 +608,6 @@ static mp_obj_t pack(struct info_t *info_p,
     return packed_p;
 }
 
-static PyObject *m_pack(PyObject *module_p, PyObject *args_p)
-{
-    Py_ssize_t number_of_args;
-    PyObject *packed_p;
-    struct info_t *info_p;
-
-    number_of_args = PyTuple_GET_SIZE(args_p);
-
-    if (number_of_args < 1) {
-        PyErr_SetString(PyExc_ValueError, "No format string.");
-
-        return (NULL);
-    }
-
-    info_p = parse_format(PyTuple_GET_ITEM(args_p, 0));
-
-    if (info_p == NULL) {
-        return (NULL);
-    }
-
-    packed_p = pack(info_p, args_p, 1, number_of_args - 1);
-    PyMem_RawFree(info_p);
-
-    return (packed_p);
-}
-
 static mp_obj_t unpack(struct info_t *info_p, mp_obj_t data_p, long offset)
 {
     struct bitstream_reader_t reader;
@@ -689,32 +663,6 @@ static mp_obj_t unpack(struct info_t *info_p, mp_obj_t data_p, long offset)
     }
 
     return unpacked_p;
-}
-
-static PyObject *m_unpack(PyObject *module_p, PyObject *args_p)
-{
-    PyObject *format_p;
-    PyObject *data_p;
-    PyObject *unpacked_p;
-    struct info_t *info_p;
-    int res;
-
-    res = PyArg_ParseTuple(args_p, "OO", &format_p, &data_p);
-
-    if (res == 0) {
-        return (NULL);
-    }
-
-    info_p = parse_format(format_p);
-
-    if (info_p == NULL) {
-        return (NULL);
-    }
-
-    unpacked_p = unpack(info_p, data_p, 0);
-    PyMem_RawFree(info_p);
-
-    return (unpacked_p);
 }
 
 static long parse_offset(PyObject *offset_p)
@@ -1517,7 +1465,17 @@ STATIC mp_obj_t bitstruct_CompiledFormatDict_unpack_from(size_t n_args, const mp
  * @param args*
  */
 STATIC mp_obj_t bitstruct_pack(size_t n_args, const mp_obj_t *args){
-    return mp_const_none;
+    mp_obj_t packed_p;
+    struct info_t *info_p;
+
+    // raises MemoryError, NotImplementedError, TypeError, ValueError
+    info_p = parse_format(args[0]);
+
+    // raises MemoryError, ValueError
+    packed_p = pack(info_p, &args[1], 0, n_args - 1);
+    m_free(info_p);
+
+    return packed_p;
 }
 
 /**
@@ -1526,7 +1484,17 @@ STATIC mp_obj_t bitstruct_pack(size_t n_args, const mp_obj_t *args){
  * @param data
  */
 STATIC mp_obj_t bitstruct_unpack(mp_obj_t format, mp_obj_t data){
-    return mp_const_none;
+    mp_obj_t unpacked_p;
+    struct info_t *info_p;
+
+    // raises MemoryError, NotImplementedError, TypeError, ValueError
+    info_p = parse_format(format);
+
+    // raises MemoryError, OverflowError, TypeError, ValueError
+    unpacked_p = unpack(info_p, data, 0);
+    m_free(info_p);
+
+    return unpacked_p;
 }
 
 /**
