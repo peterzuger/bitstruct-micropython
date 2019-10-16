@@ -37,6 +37,9 @@
 #include "py/objarray.h"
 
 #include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "bitstream.h"
 
 struct field_info_t;
