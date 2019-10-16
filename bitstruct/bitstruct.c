@@ -42,11 +42,11 @@
 struct field_info_t;
 
 typedef void (*pack_field_t)(struct bitstream_writer_t *self_p,
-                             PyObject *value_p,
+                             mp_obj_t value_p,
                              struct field_info_t *field_info_p);
 
-typedef PyObject *(*unpack_field_t)(struct bitstream_reader_t *self_p,
-                                    struct field_info_t *field_info_p);
+typedef mp_obj_t (*unpack_field_t)(struct bitstream_reader_t *self_p,
+                                   struct field_info_t *field_info_p);
 
 struct field_info_t {
     pack_field_t pack;
