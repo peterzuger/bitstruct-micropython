@@ -634,55 +634,61 @@ static PyObject *m_pack(PyObject *module_p, PyObject *args_p)
     return (packed_p);
 }
 
-static PyObject *unpack(struct info_t *info_p, PyObject *data_p, long offset)
+static mp_obj_t unpack(struct info_t *info_p, mp_obj_t data_p, long offset)
 {
     struct bitstream_reader_t reader;
-    PyObject *unpacked_p;
-    PyObject *value_p;
+    mp_obj_t unpacked_p;
+    mp_obj_t value_p;
     char *packed_p;
     int i;
     int produced_args;
-    Py_ssize_t size;
-    int res;
+    size_t size = 0;
 
-    unpacked_p = PyTuple_New(info_p->number_of_non_padding_fields);
-
-    if (unpacked_p == NULL) {
-        return (NULL);
-    }
-
-    res = PyBytes_AsStringAndSize(data_p, &packed_p, &size);
-
-    if (res == -1) {
-        goto out1;
+    if(mp_obj_is_type(data_p, &mp_type_bytearray)){
+        packed_p = ((mp_obj_array_t*)data_p)->items;
+        size = ((mp_obj_array_t*)data_p)->len;
+    }else if(mp_obj_is_type(data_p, &mp_type_list)){
+        size_t len;
+        mp_obj_t* items;
+        mp_obj_list_get(data_p, &len, &items);
+        size = len * sizeof(mp_int_t);
+        packed_p = alloca(size);
+        for(size_t j = 0; j < len; j++){
+            // raises TypeError
+            packed_p[j] = mp_obj_get_int(items[j]);
+        }
+    }else{
+        // raises TypeError
+        packed_p = (char*)mp_obj_str_get_data(data_p, &size);
     }
 
     if (size < ((info_p->number_of_bits + offset + 7) / 8)) {
-        PyErr_SetString(PyExc_ValueError, "Short data.");
-
-        goto out1;
+        mp_raise_ValueError("Short data.");
     }
 
     bitstream_reader_init(&reader, (uint8_t *)packed_p);
     bitstream_reader_seek(&reader, offset);
     produced_args = 0;
 
+    // raises MemoryError
+    unpacked_p = mp_obj_new_tuple(info_p->number_of_non_padding_fields, NULL);
+
+    size_t len;
+    mp_obj_t* items;
+
+    mp_obj_tuple_get(unpacked_p, &len, &items);
+
     for (i = 0; i < info_p->number_of_fields; i++) {
+        // raises MemoryError, OverflowError
         value_p = info_p->fields[i].unpack(&reader, &info_p->fields[i]);
 
-        if (value_p != NULL) {
-            PyTuple_SET_ITEM(unpacked_p, produced_args, value_p);
+        if (value_p != mp_const_none) {
+            items[produced_args] = value_p;
             produced_args++;
         }
     }
 
- out1:
-    if (PyErr_Occurred() != NULL) {
-        Py_DECREF(unpacked_p);
-        unpacked_p = NULL;
-    }
-
-    return (unpacked_p);
+    return unpacked_p;
 }
 
 static PyObject *m_unpack(PyObject *module_p, PyObject *args_p)
