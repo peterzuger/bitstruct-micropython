@@ -1192,11 +1192,6 @@ static mp_obj_t calcsize(struct info_t *info_p)
     return mp_obj_new_int_from_ll(info_p->number_of_bits);
 }
 
-static void compiled_format_dealloc(struct compiled_format_t *self_p)
-{
-    PyMem_RawFree(self_p->info_p);
-}
-
 static PyObject *m_compiled_format_pack(struct compiled_format_t *self_p,
                                         PyObject *args_p)
 {
@@ -1276,12 +1271,6 @@ static PyObject *m_compiled_format_unpack_from(struct compiled_format_t *self_p,
 static PyObject *m_compiled_format_calcsize(struct compiled_format_t *self_p)
 {
     return (calcsize(self_p->info_p));
-}
-
-static void compiled_format_dict_dealloc(struct compiled_format_dict_t *self_p)
-{
-    PyMem_RawFree(self_p->info_p);
-    Py_DECREF(self_p->names_p);
 }
 
 static PyObject *m_compiled_format_dict_pack(struct compiled_format_dict_t *self_p,
