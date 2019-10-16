@@ -1186,9 +1186,10 @@ static PyObject *m_unpack_from_dict(PyObject *module_p,
     return (unpacked_p);
 }
 
-static PyObject *calcsize(struct info_t *info_p)
+static mp_obj_t calcsize(struct info_t *info_p)
 {
-    return (PyLong_FromLong(info_p->number_of_bits));
+    // raises MemoryError, OverflowError
+    return mp_obj_new_int_from_ll(info_p->number_of_bits);
 }
 
 static PyObject *m_calcsize(PyObject *module_p, PyObject *format_p)
