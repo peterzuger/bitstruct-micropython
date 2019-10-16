@@ -1278,31 +1278,6 @@ static PyObject *m_compiled_format_calcsize(struct compiled_format_t *self_p)
     return (calcsize(self_p->info_p));
 }
 
-static PyObject *compiled_format_dict_new(PyTypeObject *subtype_p,
-                                          PyObject *format_p,
-                                          PyObject *names_p)
-{
-    struct compiled_format_dict_t *self_p;
-
-    is_names_list(names_p);
-
-    self_p = (struct compiled_format_dict_t *)subtype_p->tp_alloc(subtype_p, 0);
-
-    if (self_p != NULL) {
-        self_p->info_p = parse_format(format_p);
-
-        if (self_p->info_p == NULL) {
-            PyObject_Free(self_p);
-            self_p = NULL;
-        } else {
-            Py_INCREF(names_p);
-            self_p->names_p = names_p;
-        }
-    }
-
-    return ((PyObject *)self_p);
-}
-
 static void compiled_format_dict_dealloc(struct compiled_format_dict_t *self_p)
 {
     PyMem_RawFree(self_p->info_p);
@@ -1588,6 +1563,16 @@ mp_obj_t bitstruct_CompiledFormatDict_make_new(const mp_obj_type_t *type,
     bitstruct_CompiledFormatDict_obj_t *self = m_new_obj(bitstruct_CompiledFormatDict_obj_t);
 
     self->base.type = &bitstruct_CompiledFormatDict_type;
+
+    self->names_p = mp_const_none;
+    if(n_args == 2){
+        // raises TypeError
+        is_names_list(args[2]);
+        self->names_p = args[1];
+    }
+
+    // raises MemoryError, NotImplementedError, TypeError, ValueError
+    self->info_p = parse_format(args[0]);
 
     return MP_OBJ_FROM_PTR(self);
 }
