@@ -734,42 +734,28 @@ static long parse_offset(PyObject *offset_p)
     return offset;
 }
 
-static int pack_into_prepare(struct info_t *info_p,
-                             PyObject *buf_p,
-                             PyObject *offset_p,
+static void pack_into_prepare(struct info_t *info_p,
+                             mp_obj_t buf_p,
+                             mp_obj_t offset_p,
                              struct bitstream_writer_t *writer_p,
                              struct bitstream_writer_bounds_t *bounds_p)
 {
     uint8_t *packed_p;
-    Py_ssize_t size;
+    size_t size;
     long offset;
 
+    // raises TypeError, ValueError
     offset = parse_offset(offset_p);
 
-    if (offset == -1) {
-        return (-1);
+    if (!mp_obj_is_type(buf_p, &mp_type_bytearray)) {
+        mp_raise_TypeError("Bytearray needed.");
     }
 
-    if (!PyByteArray_Check(buf_p)) {
-        PyErr_SetString(PyExc_TypeError, "Bytearray needed.");
-
-        return (-1);
-    }
-
-    packed_p = (uint8_t *)PyByteArray_AsString(buf_p);
-
-    if (packed_p == NULL) {
-        return (-1);
-    }
-
-    size = PyByteArray_GET_SIZE(buf_p);
+    // raises TypeError
+    packed_p = (uint8_t *)mp_obj_str_get_data(buf_p, &size);
 
     if (size < ((info_p->number_of_bits + offset + 7) / 8)) {
-        PyErr_Format(PyExc_ValueError,
-                     "pack_into requires a buffer of at least %ld bits",
-                     info_p->number_of_bits + offset);
-
-        return (-1);
+        mp_raise_ValueError("pack_into requires a buffer of at least enough bits");
     }
 
     bitstream_writer_init(writer_p, packed_p);
@@ -778,49 +764,36 @@ static int pack_into_prepare(struct info_t *info_p,
                                  offset,
                                  info_p->number_of_bits);
     bitstream_writer_seek(writer_p, offset);
-
-    return (0);
 }
 
-static PyObject *pack_into_finalize(struct bitstream_writer_bounds_t *bounds_p)
+static mp_obj_t pack_into_finalize(struct bitstream_writer_bounds_t *bounds_p)
 {
     bitstream_writer_bounds_restore(bounds_p);
 
-    if (PyErr_Occurred() != NULL) {
-        return (NULL);
-    }
-
-    Py_INCREF(Py_None);
-
-    return (Py_None);
+    return mp_const_none;
 }
 
-static PyObject *pack_into(struct info_t *info_p,
-                           PyObject *buf_p,
-                           PyObject *offset_p,
-                           PyObject *args_p,
-                           Py_ssize_t consumed_args,
-                           Py_ssize_t number_of_args)
+static mp_obj_t pack_into(struct info_t *info_p,
+                          mp_obj_t buf_p,
+                          mp_obj_t offset_p,
+                          mp_obj_t args_p,
+                          size_t consumed_args,
+                          size_t number_of_args)
 {
     struct bitstream_writer_t writer;
     struct bitstream_writer_bounds_t bounds;
-    int res;
 
     if ((number_of_args - consumed_args) < info_p->number_of_non_padding_fields) {
-        PyErr_SetString(PyExc_ValueError, "Too few arguments.");
-
-        return (NULL);
+        mp_raise_ValueError("Too few arguments.");
     }
 
-    res = pack_into_prepare(info_p, buf_p, offset_p, &writer, &bounds);
+    // raises TypeError, ValueError
+    pack_into_prepare(info_p, buf_p, offset_p, &writer, &bounds);
 
-    if (res != 0) {
-        return (NULL);
-    }
-
+    // raises NotImplementedError, OverflowError, TypeError
     pack_pack(info_p, args_p, consumed_args, &writer);
 
-    return (pack_into_finalize(&bounds));
+    return pack_into_finalize(&bounds);
 }
 
 static PyObject *m_pack_into(PyObject *module_p,
