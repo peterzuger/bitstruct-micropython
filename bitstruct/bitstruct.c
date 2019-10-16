@@ -729,7 +729,7 @@ static mp_obj_t pack_into_finalize(struct bitstream_writer_bounds_t *bounds_p)
 static mp_obj_t pack_into(struct info_t *info_p,
                           mp_obj_t buf_p,
                           mp_obj_t offset_p,
-                          mp_obj_t args_p,
+                          const mp_obj_t* args_p,
                           size_t consumed_args,
                           size_t number_of_args)
 {
