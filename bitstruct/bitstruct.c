@@ -943,7 +943,7 @@ STATIC mp_obj_t bitstruct_CompiledFormatDict_unpack_from(size_t n_args, const mp
 
 STATIC mp_obj_t bitstruct_pack(size_t n_args, const mp_obj_t *args);
 STATIC mp_obj_t bitstruct_unpack(mp_obj_t format, mp_obj_t data);
-STATIC mp_obj_t bitstruct_pack_into(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args);
+STATIC mp_obj_t bitstruct_pack_into(size_t n_args, const mp_obj_t *args);
 STATIC mp_obj_t bitstruct_unpack_from(size_t n_args, const mp_obj_t *args);
 STATIC mp_obj_t bitstruct_pack_dict(mp_obj_t format, mp_obj_t names, mp_obj_t data);
 STATIC mp_obj_t bitstruct_unpack_dict(mp_obj_t format, mp_obj_t names, mp_obj_t data);
@@ -967,7 +967,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(bitstruct_CompiledFormatDict_unpack_f
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR(bitstruct_pack_fun_obj, 1, bitstruct_pack);
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(bitstruct_unpack_fun_obj, bitstruct_unpack);
-STATIC MP_DEFINE_CONST_FUN_OBJ_KW(bitstruct_pack_into_fun_obj, 3, bitstruct_pack_into);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR(bitstruct_pack_into_fun_obj, 3, bitstruct_pack_into);
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(bitstruct_unpack_from_fun_obj, 2, 3, bitstruct_unpack_from);
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(bitstruct_pack_dict_fun_obj, bitstruct_pack_dict);
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(bitstruct_unpack_dict_fun_obj, bitstruct_unpack_dict);
@@ -1083,10 +1083,10 @@ STATIC mp_obj_t bitstruct_CompiledFormat_unpack(mp_obj_t self_in, mp_obj_t data)
  * @param args*
  */
 STATIC mp_obj_t bitstruct_CompiledFormat_pack_into(size_t n_args, const mp_obj_t *args){
-    bitstruct_CompiledFormat_obj_t *self = MP_OBJ_TO_PTR(pos_args[0]);
+    bitstruct_CompiledFormat_obj_t *self = MP_OBJ_TO_PTR(args[0]);
 
     // raises NotImplementedError, OverflowError, TypeError, ValueError
-    return pack_into(self->info_p, pos_args[2], pos_args[2], (mp_obj_t*)pos_args, 3, n_args);
+    return pack_into(self->info_p, args[2], args[2], args, 3, n_args);
 }
 
 /**
@@ -1267,18 +1267,18 @@ STATIC mp_obj_t bitstruct_unpack(mp_obj_t format, mp_obj_t data){
  * @param args*
  * @param kwargs:
  */
-STATIC mp_obj_t bitstruct_pack_into(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args){
+STATIC mp_obj_t bitstruct_pack_into(size_t n_args, const mp_obj_t *args){
     mp_obj_t res_p;
     struct info_t *info_p;
 
     // raises MemoryError, NotImplementedError, TypeError, ValueError
-    info_p = parse_format(pos_args[0]);
+    info_p = parse_format(args[0]);
 
     // raises NotImplementedError, OverflowError, TypeError, ValueError
     res_p = pack_into(info_p,
-                      pos_args[1],
-                      pos_args[2],
-                      pos_args[0],
+                      args[1],
+                      args[2],
+                      args,
                       3,
                       n_args);
     m_free(info_p);
