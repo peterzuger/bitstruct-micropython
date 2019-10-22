@@ -4,7 +4,7 @@
 + [About](#about)
 + [Getting Started](#getting_started)
 + [Usage](#usage)
-* [module documentation][3]
++ [module documentation](3)
 
 ## About <a name = "about"></a>
 This is a port of [eerimoq/bitstruct][1] for [micropython][2]
@@ -18,16 +18,25 @@ This port of [eerimoq/bitstruct][1] is designed for [micropython][2]
 git clone --recurse-submodules https://github.com/micropython/micropython.git
 ```
 
-to compile the project, make, gcc and arm-none-eabi-gcc is required,
+to compile the project, [make][4],
+[gcc][5] and [arm-none-eabi-gcc][5] is required,
 install them from your package manager
 
 ### Installing
-To install bitstruct-micropython in a micropython port, copy or move this
-project to /micropython/ports/<your portname here>/
+To install [bitstruct-micropython][0] in a micropython port, copy or move this
+project to:
+
+```
+/micropython/ports/your portname here/
+```
 
 Then it is required to tell the micropython build system about the
 source files, to do this, append the following lines to
-/micropython/ports/<your portname here>/mpconfigport.mk
+
+```
+/micropython/ports/your portname here/mpconfigport.mk
+```
+
 ```
 SRC_MOD += bitstruct-micropython/bitstruct/bitstream.c
 SRC_MOD += bitstruct-micropython/bitstruct/bitstruct.c
@@ -36,15 +45,19 @@ SRC_MOD += bitstruct-micropython/bitstruct/bitstruct.c
 now the files get compiled, but the bitstruct module is not added to
 the micropython binary, to do this one more change is required.
 
-both changes are in /micropython/ports/<your portname here>/mpconfigport.h
+both changes are in:
 
-first tell the compiler that you defined 'mp\_module\_bitstruct', there
+```
+/micropython/ports/your portname here/mpconfigport.h
+```
+
+first tell the compiler that you defined ```mp\_module\_bitstruct```, there
 are usualy a few more of these for other builtin modules, place this after these.
 ```
 extern const struct _mp_obj_module_t mp_module_bitstruct;
 ```
 
-then you need to add the bitstruct module to the MICROPY\_PORT\_BUILTIN\_MODULES define
+then you need to add the bitstruct module to the ```MICROPY\_PORT\_BUILTIN\_MODULES``` define
 to do this just append this line at the end of the ones that are already there.
 here it is important to not leave an empty line between the last one an this one,
 since that would end the macro prematurely.
@@ -61,7 +74,7 @@ make -C mpy-cross
 
 once this is built, compile your port with:
 ```
-make -C ports/<your port name here>/
+make -C ports/your port name here/
 ```
 
 and you are ready to use bitstruct.
@@ -77,6 +90,9 @@ Keep in mind that this C port is Work in progress, while most features are worki
 there are still a few missing things most notably the missing kwarg support,
 this is one of the next things on the todo list.
 
+[0]:(https://github.com/peterzuger/bitstruct-micropython)
 [1]:(https://github.com/eerimoq/bitstruct)
 [2]:(https://github.com/eerimoq/bitstruct)
 [3]:(https://bitstruct.readthedocs.io/en/latest/)
+[4]:(https://www.gnu.org/software/make/)
+[5]:(https://gcc.gnu.org/)
