@@ -1402,7 +1402,7 @@ STATIC mp_obj_t bitstruct_pack_into_dict(size_t n_args, const mp_obj_t *pos_args
     is_names_list(pos_args[1]);
 
     // raises KeyError, NotImplementedError, OverflowError, TypeError
-    res_p = pack_into_dict(info_p, pos_args[1], pos_args[2], pos_args[2], pos_args[3]);
+    res_p = pack_into_dict(info_p, pos_args[1], pos_args[2], pos_args[3], pos_args[4]);
     gc_free(info_p);
 
     return res_p;
