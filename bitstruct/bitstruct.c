@@ -35,6 +35,7 @@
 #include "py/builtin.h"
 #include "py/objstr.h"
 #include "py/objarray.h"
+#include "py/gc.h"
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -545,7 +546,7 @@ static struct info_t *parse_format(mp_obj_t format_obj_p)
     }
 
     // raises MemoryError
-    struct info_t* n_info_p = m_malloc(size);
+    struct info_t* n_info_p = gc_alloc(size, 0);
     memcpy(n_info_p, info_p, size);
 
     return n_info_p;
@@ -607,7 +608,7 @@ static mp_obj_t pack(struct info_t *info_p,
 
     // raises MemoryError
     mp_obj_t packed_p = mp_obj_new_bytes(data, (info_p->number_of_bits + 7) / 8);
-    m_free(data);
+    gc_free(data);
 
     return packed_p;
 }
@@ -1259,7 +1260,7 @@ STATIC mp_obj_t bitstruct_pack(size_t n_args, const mp_obj_t *args){
 
     // raises MemoryError, ValueError
     packed_p = pack(info_p, &args[1], 0, n_args - 1);
-    m_free(info_p);
+    gc_free(info_p);
 
     return packed_p;
 }
@@ -1278,7 +1279,7 @@ STATIC mp_obj_t bitstruct_unpack(mp_obj_t format, mp_obj_t data){
 
     // raises MemoryError, OverflowError, TypeError, ValueError
     unpacked_p = unpack(info_p, data, 0);
-    m_free(info_p);
+    gc_free(info_p);
 
     return unpacked_p;
 }
@@ -1305,7 +1306,7 @@ STATIC mp_obj_t bitstruct_pack_into(size_t n_args, const mp_obj_t *args){
                       args,
                       3,
                       n_args);
-    m_free(info_p);
+    gc_free(info_p);
 
     return res_p;
 }
@@ -1330,7 +1331,7 @@ STATIC mp_obj_t bitstruct_unpack_from(size_t n_args, const mp_obj_t *args){
 
     // raises MemoryError, OverflowError, TypeError, ValueError
     unpacked_p = unpack_from(info_p, args[2], offset);
-    m_free(info_p);
+    gc_free(info_p);
 
     return unpacked_p;
 }
@@ -1353,7 +1354,7 @@ STATIC mp_obj_t bitstruct_pack_dict(mp_obj_t format, mp_obj_t names, mp_obj_t da
 
     // raises KeyError, MemoryError, NotImplementedError, OverflowError, ValueError
     packed_p = pack_dict(info_p, names, data);
-    m_free(info_p);
+    gc_free(info_p);
 
     return packed_p;
 }
@@ -1376,7 +1377,7 @@ STATIC mp_obj_t bitstruct_unpack_dict(mp_obj_t format, mp_obj_t names, mp_obj_t 
 
     // raises MemoryError, OverflowError, TypeError, ValueError
     unpacked_p = unpack_dict(info_p, names, data, 0);
-    m_free(info_p);
+    gc_free(info_p);
 
     return unpacked_p;
 }
@@ -1402,7 +1403,7 @@ STATIC mp_obj_t bitstruct_pack_into_dict(size_t n_args, const mp_obj_t *pos_args
 
     // raises KeyError, NotImplementedError, OverflowError, TypeError
     res_p = pack_into_dict(info_p, pos_args[1], pos_args[2], pos_args[2], pos_args[3]);
-    m_free(info_p);
+    gc_free(info_p);
 
     return res_p;
 }
@@ -1432,7 +1433,7 @@ STATIC mp_obj_t bitstruct_unpack_from_dict(size_t n_args, const mp_obj_t *args){
 
     // raises MemoryError, OverflowError, TypeError, ValueError
     unpacked_p = unpack_from_dict(info_p, args[1], args[2], offset);
-    m_free(info_p);
+    gc_free(info_p);
 
     return unpacked_p;
 }
@@ -1447,7 +1448,7 @@ STATIC mp_obj_t bitstruct_calcsize(mp_obj_t format){
 
     // raises MemoryError, OverflowError
     mp_obj_t size = calcsize(info_p);
-    m_free(info_p);
+    gc_free(info_p);
 
     return size;
 }
