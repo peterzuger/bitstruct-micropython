@@ -4,7 +4,7 @@
 + [About](#about)
 + [Getting Started](#getting_started)
 + [Usage](#usage)
-+ [module documentation](3)
++ [module documentation](https://bitstruct.readthedocs.io/en/latest/)
 
 ## About <a name = "about"></a>
 This is a port of [eerimoq/bitstruct][1] for [micropython][2]
@@ -23,18 +23,16 @@ to compile the project, [make][4],
 install them from your package manager
 
 ### Installing
-To install [bitstruct-micropython][0] in a micropython port, copy or move this
-project to:
+[bitstruct-micropython][0] should work on any micropython port,
+to make the required changes, move to the directory of your required port.
 
-```
-/micropython/ports/your portname here/
-```
+The first step of the installation is to move this project to the folder of your port.
 
 Then it is required to tell the micropython build system about the
 source files, to do this, append the following lines to
 
 ```
-/micropython/ports/your portname here/mpconfigport.mk
+mpconfigport.mk
 ```
 
 ```
@@ -48,7 +46,7 @@ the micropython binary, to do this one more change is required.
 both changes are in:
 
 ```
-/micropython/ports/your portname here/mpconfigport.h
+mpconfigport.h
 ```
 
 first tell the compiler that you defined ```mp\_module\_bitstruct```, there
