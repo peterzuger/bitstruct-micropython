@@ -162,11 +162,12 @@ static void pack_float_32(struct bitstream_writer_t *self_p,
                           mp_obj_t value_p,
                           struct field_info_t *field_info_p)
 {
-    mp_float_t value;
+    // relies on sizeof(float) == 4 this is always the case with gcc
+    float value;
     uint32_t data;
 
     // raises TypeError
-    value = mp_obj_get_float(value_p);
+    value = (float)mp_obj_get_float(value_p);
     memcpy(&data, &value, sizeof(data));
     bitstream_writer_write_u32(self_p, data);
 }
@@ -174,13 +175,14 @@ static void pack_float_32(struct bitstream_writer_t *self_p,
 static mp_obj_t unpack_float_32(struct bitstream_reader_t *self_p,
                                 struct field_info_t *field_info_p)
 {
-    mp_float_t value;
+    // relies on sizeof(float) == 4 this is always the case with gcc
+    float value;
     uint32_t data;
 
-    data = bitstream_reader_read_u32(self_p);
-    memcpy(&value, &data, sizeof(value));
+    data = (float)bitstream_reader_read_u32(self_p);
+    memcpy(&value, &data, sizeof(data));
 
-    return mp_obj_new_float(value);
+    return mp_obj_new_float((mp_float_t)value);
 }
 
 static void pack_bool(struct bitstream_writer_t *self_p,
