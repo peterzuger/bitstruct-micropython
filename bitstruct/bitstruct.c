@@ -1140,9 +1140,9 @@ mp_obj_t bitstruct_CompiledFormatDict_make_new(const mp_obj_type_t *type,
     self->base.type = &bitstruct_CompiledFormatDict_type;
 
     self->names_p = mp_const_none;
-    if(n_args == 2){
+    if((n_args == 2) && (args[1] != mp_const_none)){
         // raises TypeError
-        is_names_list(args[2]);
+        is_names_list(args[1]);
         self->names_p = args[1];
     }
 
