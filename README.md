@@ -49,13 +49,13 @@ both changes are in:
 mpconfigport.h
 ```
 
-first tell the compiler that you defined ```mp\_module\_bitstruct```, there
+first tell the compiler that you defined ```mp_module_bitstruct```, there
 are usualy a few more of these for other builtin modules, place this after these.
 ```
 extern const struct _mp_obj_module_t mp_module_bitstruct;
 ```
 
-then you need to add the bitstruct module to the ```MICROPY\_PORT\_BUILTIN\_MODULES``` define
+then you need to add the bitstruct module to the ```MICROPY_PORT_BUILTIN_MODULES``` define
 to do this just append this line at the end of the ones that are already there.
 here it is important to not leave an empty line between the last one an this one,
 since that would end the macro prematurely.
