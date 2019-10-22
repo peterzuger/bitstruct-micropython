@@ -707,8 +707,8 @@ static void pack_into_prepare(struct info_t *info_p,
         mp_raise_TypeError("Bytearray needed.");
     }
 
-    // raises TypeError
-    packed_p = (uint8_t *)mp_obj_str_get_data(buf_p, &size);
+    packed_p = ((mp_obj_array_t*)buf_p)->items;
+    size = ((mp_obj_array_t*)buf_p)->len;
 
     if (size < ((info_p->number_of_bits + offset + 7) / 8)) {
         mp_raise_ValueError("pack_into requires a buffer of at least enough bits");
