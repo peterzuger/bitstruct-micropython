@@ -1116,6 +1116,9 @@ STATIC mp_obj_t bitstruct_CompiledFormat_unpack(mp_obj_t self_in, mp_obj_t data)
 STATIC mp_obj_t bitstruct_CompiledFormat_pack_into(size_t n_args, const mp_obj_t *args, mp_map_t *kw_args){
     bitstruct_CompiledFormat_obj_t *self = MP_OBJ_TO_PTR(args[0]);
 
+    bool fill_padding = fill_pading_from_kwarg(kw_args);
+    (void)fill_padding;
+
     // raises NotImplementedError, OverflowError, TypeError, ValueError
     return pack_into(self->info_p, args[2], args[2], args, 3, n_args);
 }
@@ -1243,6 +1246,9 @@ STATIC mp_obj_t bitstruct_CompiledFormatDict_unpack(mp_obj_t self_in, mp_obj_t d
 STATIC mp_obj_t bitstruct_CompiledFormatDict_pack_into(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args){
     bitstruct_CompiledFormatDict_obj_t *self = MP_OBJ_TO_PTR(pos_args[0]);
 
+    bool fill_padding = fill_pading_from_kwarg(kw_args);
+    (void)fill_padding;
+
     // raises KeyError, NotImplementedError, OverflowError, TypeError
     return pack_into_dict(self->info_p, self->names_p, pos_args[1], 0, pos_args[2]);
 }
@@ -1323,6 +1329,9 @@ STATIC mp_obj_t bitstruct_unpack(mp_obj_t format, mp_obj_t data){
 STATIC mp_obj_t bitstruct_pack_into(size_t n_args, const mp_obj_t *args, mp_map_t *kw_args){
     mp_obj_t res_p;
     struct info_t *info_p;
+
+    bool fill_padding = fill_pading_from_kwarg(kw_args);
+    (void)fill_padding;
 
     // raises MemoryError, NotImplementedError, TypeError, ValueError
     info_p = parse_format(args[0]);
@@ -1422,6 +1431,9 @@ STATIC mp_obj_t bitstruct_unpack_dict(mp_obj_t format, mp_obj_t names, mp_obj_t 
 STATIC mp_obj_t bitstruct_pack_into_dict(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args){
     mp_obj_t res_p;
     struct info_t *info_p;
+
+    bool fill_padding = fill_pading_from_kwarg(kw_args);
+    (void)fill_padding;
 
     // raises MemoryError, NotImplementedError, TypeError, ValueError
     info_p = parse_format(pos_args[0]);
