@@ -1032,7 +1032,10 @@ const mp_obj_type_t bitstruct_CompiledFormatDict_type={
     .locals_dict = (mp_obj_dict_t*)&bitstruct_CompiledFormatDict_locals_dict,
 };
 
-
+/**
+ * Python: bitstruct.CompiledFormat(fmt)
+ * @param fmt
+ */
 mp_obj_t bitstruct_CompiledFormat_make_new(const mp_obj_type_t *type,
                                            size_t n_args,
                                            size_t n_kw,
@@ -1050,6 +1053,10 @@ mp_obj_t bitstruct_CompiledFormat_make_new(const mp_obj_type_t *type,
     return MP_OBJ_FROM_PTR(self);
 }
 
+/**
+ * Python: print(bitstruct.CompiledFormat(fmt))
+ * @param obj
+ */
 STATIC void bitstruct_CompiledFormat_print(const mp_print_t *print,
                                            mp_obj_t self_in,mp_print_kind_t kind){
     bitstruct_CompiledFormat_obj_t *self = MP_OBJ_TO_PTR(self_in);
@@ -1154,6 +1161,10 @@ mp_obj_t bitstruct_CompiledFormatDict_make_new(const mp_obj_type_t *type,
     return MP_OBJ_FROM_PTR(self);
 }
 
+/**
+ * Python: print(bitstruct.CompiledFormatDict(fmt))
+ * @param obj
+ */
 STATIC void bitstruct_CompiledFormatDict_print(const mp_print_t *print,
                                                mp_obj_t self_in,mp_print_kind_t kind){
     bitstruct_CompiledFormatDict_obj_t *self = MP_OBJ_TO_PTR(self_in);
@@ -1212,7 +1223,7 @@ STATIC mp_obj_t bitstruct_CompiledFormatDict_unpack(mp_obj_t self_in, mp_obj_t d
  * @param buf
  * @param offset
  * @param data
- * @param kwargs:
+ * @param kwargs: fill_padding = true
  */
 STATIC mp_obj_t bitstruct_CompiledFormatDict_pack_into(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args){
     bitstruct_CompiledFormatDict_obj_t *self = MP_OBJ_TO_PTR(pos_args[0]);
@@ -1292,7 +1303,7 @@ STATIC mp_obj_t bitstruct_unpack(mp_obj_t format, mp_obj_t data){
  * @param buf
  * @param offset
  * @param args*
- * @param kwargs:
+ * @param kwargs: fill_padding = true
  */
 STATIC mp_obj_t bitstruct_pack_into(size_t n_args, const mp_obj_t *args){
     mp_obj_t res_p;
@@ -1391,7 +1402,7 @@ STATIC mp_obj_t bitstruct_unpack_dict(mp_obj_t format, mp_obj_t names, mp_obj_t 
  * @param buf
  * @param offset
  * @param data
- * @param kwargs:
+ * @param kwargs: fill_padding = true
  */
 STATIC mp_obj_t bitstruct_pack_into_dict(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args){
     mp_obj_t res_p;
