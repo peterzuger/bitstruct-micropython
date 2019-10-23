@@ -1,6 +1,4 @@
-from __future__ import print_function
 import sys
-import timeit
 import unittest
 from bitstruct import *
 import bitstruct
