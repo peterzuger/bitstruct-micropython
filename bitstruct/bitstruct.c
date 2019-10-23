@@ -45,30 +45,30 @@
 
 struct field_info_t;
 
-typedef void (*pack_field_t)(struct bitstream_writer_t *self_p,
+typedef void (*pack_field_t)(struct bitstream_writer_t* self_p,
                              mp_obj_t value_p,
-                             struct field_info_t *field_info_p);
+                             struct field_info_t* field_info_p);
 
-typedef mp_obj_t (*unpack_field_t)(struct bitstream_reader_t *self_p,
-                                   struct field_info_t *field_info_p);
+typedef mp_obj_t (*unpack_field_t)(struct bitstream_reader_t* self_p,
+                                   struct field_info_t* field_info_p);
 
-struct field_info_t {
+struct field_info_t{
     pack_field_t pack;
     unpack_field_t unpack;
     int number_of_bits;
     bool is_padding;
-    union {
-        struct {
+    union{
+        struct{
             int64_t lower;
             int64_t upper;
-        } s;
-        struct {
+        }s;
+        struct{
             uint64_t upper;
-        } u;
-    } limits;
+        }u;
+    }limits;
 };
 
-struct info_t {
+struct info_t{
     int number_of_bits;
     int number_of_fields;
     int number_of_non_padding_fields;
@@ -78,16 +78,14 @@ struct info_t {
 /**
  * @raises TypeError
  */
-static void is_names_list(mp_obj_t names_p)
-{
+static void is_names_list(mp_obj_t names_p){
     if(!mp_obj_is_type(names_p, &mp_type_list))
         mp_raise_TypeError("Names is not a list.");
 }
 
-static void pack_signed_integer(struct bitstream_writer_t *self_p,
+static void pack_signed_integer(struct bitstream_writer_t* self_p,
                                 mp_obj_t value_p,
-                                struct field_info_t *field_info_p)
-{
+                                struct field_info_t* field_info_p){
     int64_t value;
     int64_t lower;
     int64_t upper;
@@ -95,11 +93,11 @@ static void pack_signed_integer(struct bitstream_writer_t *self_p,
     // raises TypeError
     value = mp_obj_get_int(value_p);
 
-    if (field_info_p->number_of_bits < 64) {
+    if(field_info_p->number_of_bits < 64){
         lower = field_info_p->limits.s.lower;
         upper = field_info_p->limits.s.upper;
 
-        if ((value < lower) || (value > upper)) {
+        if((value < lower) || (value > upper)){
             mp_raise_msg(&mp_type_OverflowError, "Signed integer out of range.");
         }
 
@@ -111,16 +109,15 @@ static void pack_signed_integer(struct bitstream_writer_t *self_p,
                                     field_info_p->number_of_bits);
 }
 
-static mp_obj_t unpack_signed_integer(struct bitstream_reader_t *self_p,
-                                      struct field_info_t *field_info_p)
-{
+static mp_obj_t unpack_signed_integer(struct bitstream_reader_t* self_p,
+                                      struct field_info_t* field_info_p){
     uint64_t value;
     uint64_t sign_bit;
 
     value = bitstream_reader_read_u64_bits(self_p, field_info_p->number_of_bits);
     sign_bit = (1ull << (field_info_p->number_of_bits - 1));
 
-    if (value & sign_bit) {
+    if(value & sign_bit){
         value |= ~(((sign_bit) << 1) - 1);
     }
 
@@ -128,16 +125,15 @@ static mp_obj_t unpack_signed_integer(struct bitstream_reader_t *self_p,
     return mp_obj_new_int_from_ll((long long)value);
 }
 
-static void pack_unsigned_integer(struct bitstream_writer_t *self_p,
+static void pack_unsigned_integer(struct bitstream_writer_t* self_p,
                                   mp_obj_t value_p,
-                                  struct field_info_t *field_info_p)
-{
+                                  struct field_info_t* field_info_p){
     uint64_t value;
 
     // raises TypeError
     value = mp_obj_get_int(value_p);
 
-    if (value > field_info_p->limits.u.upper) {
+    if(value > field_info_p->limits.u.upper){
         mp_raise_msg(&mp_type_OverflowError, "Unsigned integer out of range.");
     }
 
@@ -146,9 +142,8 @@ static void pack_unsigned_integer(struct bitstream_writer_t *self_p,
                                     field_info_p->number_of_bits);
 }
 
-static mp_obj_t unpack_unsigned_integer(struct bitstream_reader_t *self_p,
-                                        struct field_info_t *field_info_p)
-{
+static mp_obj_t unpack_unsigned_integer(struct bitstream_reader_t* self_p,
+                                        struct field_info_t* field_info_p){
     uint64_t value;
 
     value = bitstream_reader_read_u64_bits(self_p,
@@ -158,10 +153,9 @@ static mp_obj_t unpack_unsigned_integer(struct bitstream_reader_t *self_p,
     return mp_obj_new_int_from_ull(value);
 }
 
-static void pack_float_32(struct bitstream_writer_t *self_p,
+static void pack_float_32(struct bitstream_writer_t* self_p,
                           mp_obj_t value_p,
-                          struct field_info_t *field_info_p)
-{
+                          struct field_info_t* field_info_p){
     // relies on sizeof(float) == 4 this is always the case with gcc
     float value;
     uint32_t data;
@@ -172,9 +166,8 @@ static void pack_float_32(struct bitstream_writer_t *self_p,
     bitstream_writer_write_u32(self_p, data);
 }
 
-static mp_obj_t unpack_float_32(struct bitstream_reader_t *self_p,
-                                struct field_info_t *field_info_p)
-{
+static mp_obj_t unpack_float_32(struct bitstream_reader_t* self_p,
+                                struct field_info_t* field_info_p){
     // relies on sizeof(float) == 4 this is always the case with gcc
     float value;
     uint32_t data;
@@ -185,47 +178,43 @@ static mp_obj_t unpack_float_32(struct bitstream_reader_t *self_p,
     return mp_obj_new_float((mp_float_t)value);
 }
 
-static void pack_bool(struct bitstream_writer_t *self_p,
+static void pack_bool(struct bitstream_writer_t* self_p,
                       mp_obj_t value_p,
-                      struct field_info_t *field_info_p)
-{
+                      struct field_info_t* field_info_p){
     bitstream_writer_write_u64_bits(self_p,
                                     mp_obj_is_true(value_p),
                                     field_info_p->number_of_bits);
 }
 
-static mp_obj_t unpack_bool(struct bitstream_reader_t *self_p,
-                            struct field_info_t *field_info_p)
-{
+static mp_obj_t unpack_bool(struct bitstream_reader_t* self_p,
+                            struct field_info_t* field_info_p){
     return ((long)bitstream_reader_read_u64_bits(
                 self_p,
                 field_info_p->number_of_bits))
         ? mp_const_true : mp_const_false;
 }
 
-static void pack_text(struct bitstream_writer_t *self_p,
+static void pack_text(struct bitstream_writer_t* self_p,
                       mp_obj_t value_p,
-                      struct field_info_t *field_info_p)
-{
+                      struct field_info_t* field_info_p){
     size_t size;
     const char* buf_p;
 
     // raises TypeError
     buf_p = mp_obj_str_get_data(value_p, &size);
 
-    if (size < (field_info_p->number_of_bits / 8)) {
+    if(size < (field_info_p->number_of_bits / 8)){
         mp_raise_NotImplementedError("Short text.");
-    } else {
+    }else{
         bitstream_writer_write_bytes(self_p,
-                                     (uint8_t *)buf_p,
+                                     (uint8_t*)buf_p,
                                      field_info_p->number_of_bits / 8);
     }
 }
 
-static mp_obj_t unpack_text(struct bitstream_reader_t *self_p,
-                            struct field_info_t *field_info_p)
-{
-    uint8_t *buf_p;
+static mp_obj_t unpack_text(struct bitstream_reader_t* self_p,
+                            struct field_info_t* field_info_p){
+    uint8_t* buf_p;
     mp_obj_t value_p;
     int number_of_bytes;
 
@@ -235,34 +224,32 @@ static mp_obj_t unpack_text(struct bitstream_reader_t *self_p,
     bitstream_reader_read_bytes(self_p, buf_p, number_of_bytes);
 
     // raises MemoryError
-    value_p = mp_obj_new_str((const char *)buf_p, number_of_bytes);
+    value_p = mp_obj_new_str((const char*)buf_p, number_of_bytes);
 
     return value_p;
 }
 
-static void pack_raw(struct bitstream_writer_t *self_p,
+static void pack_raw(struct bitstream_writer_t* self_p,
                      mp_obj_t value_p,
-                     struct field_info_t *field_info_p)
-{
+                     struct field_info_t* field_info_p){
     size_t size;
     char* buf_p;
 
     // raises TypeError
     buf_p = (char*)mp_obj_str_get_data(value_p, &size);
 
-    if (size < (field_info_p->number_of_bits / 8)) {
+    if(size < (field_info_p->number_of_bits / 8)){
         mp_raise_NotImplementedError("Short raw data.");
-    } else {
+    }else{
         bitstream_writer_write_bytes(self_p,
-                                     (uint8_t *)buf_p,
+                                     (uint8_t*)buf_p,
                                      field_info_p->number_of_bits / 8);
     }
 }
 
-static mp_obj_t unpack_raw(struct bitstream_reader_t *self_p,
-                           struct field_info_t *field_info_p)
-{
-    uint8_t *buf_p;
+static mp_obj_t unpack_raw(struct bitstream_reader_t* self_p,
+                           struct field_info_t* field_info_p){
+    uint8_t* buf_p;
     mp_obj_t value_p;
     int number_of_bytes;
 
@@ -278,41 +265,37 @@ static mp_obj_t unpack_raw(struct bitstream_reader_t *self_p,
     return value_p;
 }
 
-static void pack_zero_padding(struct bitstream_writer_t *self_p,
+static void pack_zero_padding(struct bitstream_writer_t* self_p,
                               mp_obj_t value_p,
-                              struct field_info_t *field_info_p)
-{
+                              struct field_info_t* field_info_p){
     bitstream_writer_write_repeated_bit(self_p,
                                         0,
                                         field_info_p->number_of_bits);
 }
 
-static void pack_one_padding(struct bitstream_writer_t *self_p,
+static void pack_one_padding(struct bitstream_writer_t* self_p,
                              mp_obj_t value_p,
-                             struct field_info_t *field_info_p)
-{
+                             struct field_info_t* field_info_p){
     bitstream_writer_write_repeated_bit(self_p,
                                         1,
                                         field_info_p->number_of_bits);
 }
 
-static mp_obj_t unpack_padding(struct bitstream_reader_t *self_p,
-                               struct field_info_t *field_info_p)
-{
+static mp_obj_t unpack_padding(struct bitstream_reader_t* self_p,
+                               struct field_info_t* field_info_p){
     bitstream_reader_seek(self_p, field_info_p->number_of_bits);
 
     return mp_const_none;
 }
 
-static void field_info_init_signed(struct field_info_t *self_p,
-                                   int number_of_bits)
-{
+static void field_info_init_signed(struct field_info_t* self_p,
+                                   int number_of_bits){
     uint64_t limit;
 
     self_p->pack = pack_signed_integer;
     self_p->unpack = unpack_signed_integer;
 
-    if (number_of_bits > 64) {
+    if(number_of_bits > 64){
         mp_raise_NotImplementedError("Signed integer over 64 bits.");
     }
 
@@ -321,28 +304,25 @@ static void field_info_init_signed(struct field_info_t *self_p,
     self_p->limits.s.upper = (limit - 1);
 }
 
-static void field_info_init_unsigned(struct field_info_t *self_p,
-                                     int number_of_bits)
-{
+static void field_info_init_unsigned(struct field_info_t* self_p,
+                                     int number_of_bits){
     self_p->pack = pack_unsigned_integer;
     self_p->unpack = unpack_unsigned_integer;
 
-    if (number_of_bits > 64) {
+    if(number_of_bits > 64){
         mp_raise_NotImplementedError("Unsigned integer over 64 bits.");
     }
 
-    if (number_of_bits < 64) {
+    if(number_of_bits < 64){
         self_p->limits.u.upper = ((1ull << number_of_bits) - 1);
-    } else {
+    }else{
         self_p->limits.u.upper = (uint64_t)-1;
     }
 }
 
-static void field_info_init_float(struct field_info_t *self_p,
-                                  int number_of_bits)
-{
-    switch (number_of_bits) {
-
+static void field_info_init_float(struct field_info_t* self_p,
+                                  int number_of_bits){
+    switch(number_of_bits){
     case 32:
         self_p->pack = pack_float_32;
         self_p->unpack = unpack_float_32;
@@ -353,61 +333,54 @@ static void field_info_init_float(struct field_info_t *self_p,
     }
 }
 
-static void field_info_init_bool(struct field_info_t *self_p,
-                                 int number_of_bits)
-{
+static void field_info_init_bool(struct field_info_t* self_p,
+                                 int number_of_bits){
     self_p->pack = pack_bool;
     self_p->unpack = unpack_bool;
 
-    if (number_of_bits > 64) {
+    if(number_of_bits > 64){
         mp_raise_NotImplementedError("Bool over 64 bits.");
     }
 }
 
-static void field_info_init_text(struct field_info_t *self_p,
-                                 int number_of_bits)
-{
+static void field_info_init_text(struct field_info_t* self_p,
+                                 int number_of_bits){
     self_p->pack = pack_text;
     self_p->unpack = unpack_text;
 
-    if ((number_of_bits % 8) != 0) {
+    if((number_of_bits % 8) != 0){
         mp_raise_NotImplementedError("Text not multiple of 8 bits.");
     }
 }
 
-static void field_info_init_raw(struct field_info_t *self_p,
-                                int number_of_bits)
-{
+static void field_info_init_raw(struct field_info_t* self_p,
+                                int number_of_bits){
     self_p->pack = pack_raw;
     self_p->unpack = unpack_raw;
 
-    if ((number_of_bits % 8) != 0) {
+    if((number_of_bits % 8) != 0){
         mp_raise_NotImplementedError("Raw not multiple of 8 bits.");
     }
 }
 
-static void field_info_init_zero_padding(struct field_info_t *self_p)
-{
+static void field_info_init_zero_padding(struct field_info_t* self_p){
     self_p->pack = pack_zero_padding;
     self_p->unpack = unpack_padding;
 }
 
-static void field_info_init_one_padding(struct field_info_t *self_p)
-{
+static void field_info_init_one_padding(struct field_info_t* self_p){
     self_p->pack = pack_one_padding;
     self_p->unpack = unpack_padding;
 }
 
-static void field_info_init(struct field_info_t *self_p,
+static void field_info_init(struct field_info_t* self_p,
                             int kind,
-                            int number_of_bits)
-{
+                            int number_of_bits){
     bool is_padding;
 
     is_padding = false;
 
-    switch (kind) {
-
+    switch(kind){
     case 's':
         // raises NotImplementedError
         field_info_init_signed(self_p, number_of_bits);
@@ -459,19 +432,18 @@ static void field_info_init(struct field_info_t *self_p,
     self_p->is_padding = is_padding;
 }
 
-static int count_number_of_fields(const char *format_p,
-                                  int *number_of_padding_fields_p)
-{
+static int count_number_of_fields(const char* format_p,
+                                  int* number_of_padding_fields_p){
     int count;
 
     count = 0;
     *number_of_padding_fields_p = 0;
 
-    while (*format_p != '\0') {
-        if ((*format_p >= 'A') && (*format_p <= 'z')) {
+    while(*format_p != '\0'){
+        if((*format_p >= 'A') && (*format_p <= 'z')){
             count++;
 
-            if ((*format_p == 'p') || (*format_p == 'P')) {
+            if((*format_p == 'p') || (*format_p == 'P')){
                 (*number_of_padding_fields_p)++;
             }
         }
@@ -484,11 +456,10 @@ static int count_number_of_fields(const char *format_p,
 
 static inline int isspace(int c){return (((c>='\t')&&(c<='\r')) || (c==' '));}
 static inline int isdigit(int c){return ((c>='0')&&(c<='9'));}
-const char *parse_field(const char *format_p,
-                        int *kind_p,
-                        int *number_of_bits_p)
-{
-    while (isspace(*format_p)) {
+const char* parse_field(const char* format_p,
+                        int* kind_p,
+                        int* number_of_bits_p){
+    while(isspace(*format_p)){
         format_p++;
     }
 
@@ -496,8 +467,8 @@ const char *parse_field(const char *format_p,
     *number_of_bits_p = 0;
     format_p++;
 
-    while (isdigit(*format_p)) {
-        if (*number_of_bits_p > (INT_MAX / 100)) {
+    while(isdigit(*format_p)){
+        if(*number_of_bits_p > (INT_MAX / 100)){
             mp_raise_ValueError("Field too long.");
         }
 
@@ -506,18 +477,17 @@ const char *parse_field(const char *format_p,
         format_p++;
     }
 
-    if (*number_of_bits_p == 0) {
+    if(*number_of_bits_p == 0){
         mp_raise_ValueError("Field of size 0.");
     }
 
     return format_p;
 }
 
-static struct info_t *parse_format(mp_obj_t format_obj_p)
-{
+static struct info_t* parse_format(mp_obj_t format_obj_p){
     int number_of_fields;
-    struct info_t *info_p;
-    const char *format_p;
+    struct info_t* info_p;
+    const char* format_p;
     int i;
     int kind;
     int number_of_bits;
@@ -537,7 +507,7 @@ static struct info_t *parse_format(mp_obj_t format_obj_p)
     info_p->number_of_non_padding_fields = (
         number_of_fields - number_of_padding_fields);
 
-    for (i = 0; i < info_p->number_of_fields; i++) {
+    for(i = 0; i < info_p->number_of_fields; i++){
         // raises ValueError
         format_p = parse_field(format_p, &kind, &number_of_bits);
 
@@ -554,21 +524,20 @@ static struct info_t *parse_format(mp_obj_t format_obj_p)
     return n_info_p;
 }
 
-static void pack_pack(struct info_t *info_p,
+static void pack_pack(struct info_t* info_p,
                       const mp_obj_t* args_p,
                       int consumed_args,
-                      struct bitstream_writer_t *writer_p)
-{
+                      struct bitstream_writer_t* writer_p){
     mp_obj_t value_p;
     int i;
-    struct field_info_t *field_p;
+    struct field_info_t* field_p;
 
-    for (i = 0; i < info_p->number_of_fields; i++) {
+    for(i = 0; i < info_p->number_of_fields; i++){
         field_p = &info_p->fields[i];
 
-        if (field_p->is_padding) {
+        if(field_p->is_padding){
             value_p = mp_const_none;
-        } else {
+        }else{
             value_p = args_p[consumed_args];
             consumed_args++;
         }
@@ -578,9 +547,8 @@ static void pack_pack(struct info_t *info_p,
     }
 }
 
-static uint8_t* pack_prepare(struct info_t *info_p,
-                             struct bitstream_writer_t *writer_p)
-{
+static uint8_t* pack_prepare(struct info_t* info_p,
+                             struct bitstream_writer_t* writer_p){
     uint8_t* data;
 
     // raises MemoryError
@@ -591,14 +559,13 @@ static uint8_t* pack_prepare(struct info_t *info_p,
     return data;
 }
 
-static mp_obj_t pack(struct info_t *info_p,
+static mp_obj_t pack(struct info_t* info_p,
                      const mp_obj_t* args_p,
                      int consumed_args,
-                     size_t number_of_args)
-{
+                     size_t number_of_args){
     struct bitstream_writer_t writer;
 
-    if (number_of_args < info_p->number_of_non_padding_fields) {
+    if(number_of_args < info_p->number_of_non_padding_fields){
         mp_raise_ValueError("Too few arguments.");
     }
 
@@ -615,12 +582,11 @@ static mp_obj_t pack(struct info_t *info_p,
     return packed_p;
 }
 
-static mp_obj_t unpack(struct info_t *info_p, mp_obj_t data_p, long offset)
-{
+static mp_obj_t unpack(struct info_t* info_p, mp_obj_t data_p, long offset){
     struct bitstream_reader_t reader;
     mp_obj_t unpacked_p;
     mp_obj_t value_p;
-    char *packed_p;
+    char* packed_p;
     int i;
     int produced_args;
     size_t size = 0;
@@ -643,11 +609,11 @@ static mp_obj_t unpack(struct info_t *info_p, mp_obj_t data_p, long offset)
         packed_p = (char*)mp_obj_str_get_data(data_p, &size);
     }
 
-    if (size < ((info_p->number_of_bits + offset + 7) / 8)) {
+    if(size < ((info_p->number_of_bits + offset + 7) / 8)){
         mp_raise_ValueError("Short data.");
     }
 
-    bitstream_reader_init(&reader, (uint8_t *)packed_p);
+    bitstream_reader_init(&reader, (uint8_t*)packed_p);
     bitstream_reader_seek(&reader, offset);
     produced_args = 0;
 
@@ -659,11 +625,11 @@ static mp_obj_t unpack(struct info_t *info_p, mp_obj_t data_p, long offset)
 
     mp_obj_tuple_get(unpacked_p, &len, &items);
 
-    for (i = 0; i < info_p->number_of_fields; i++) {
+    for(i = 0; i < info_p->number_of_fields; i++){
         // raises MemoryError, OverflowError
         value_p = info_p->fields[i].unpack(&reader, &info_p->fields[i]);
 
-        if (value_p != mp_const_none) {
+        if(value_p != mp_const_none){
             items[produced_args] = value_p;
             produced_args++;
         }
@@ -672,45 +638,43 @@ static mp_obj_t unpack(struct info_t *info_p, mp_obj_t data_p, long offset)
     return unpacked_p;
 }
 
-static long parse_offset(mp_obj_t offset_p)
-{
+static long parse_offset(mp_obj_t offset_p){
     unsigned long offset;
 
     // raises TypeError
     offset = mp_obj_get_int(offset_p);
 
-    if (offset == (unsigned long)-1) {
+    if(offset == (unsigned long)-1){
         mp_raise_ValueError("negative offset");
     }
 
-    if (offset > 0x7fffffff) {
+    if(offset > 0x7fffffff){
         mp_raise_ValueError("Offset must be less or equal to 2147483647 bits.");
     }
 
     return offset;
 }
 
-static void pack_into_prepare(struct info_t *info_p,
+static void pack_into_prepare(struct info_t* info_p,
                               mp_obj_t buf_p,
                               mp_obj_t offset_p,
-                              struct bitstream_writer_t *writer_p,
-                              struct bitstream_writer_bounds_t *bounds_p)
-{
-    uint8_t *packed_p;
+                              struct bitstream_writer_t* writer_p,
+                              struct bitstream_writer_bounds_t* bounds_p){
+    uint8_t* packed_p;
     size_t size;
     long offset;
 
     // raises TypeError, ValueError
     offset = parse_offset(offset_p);
 
-    if (!mp_obj_is_type(buf_p, &mp_type_bytearray)) {
+    if(!mp_obj_is_type(buf_p, &mp_type_bytearray)){
         mp_raise_TypeError("Bytearray needed.");
     }
 
     packed_p = ((mp_obj_array_t*)buf_p)->items;
     size = ((mp_obj_array_t*)buf_p)->len;
 
-    if (size < ((info_p->number_of_bits + offset + 7) / 8)) {
+    if(size < ((info_p->number_of_bits + offset + 7) / 8)){
         mp_raise_ValueError("pack_into requires a buffer of at least enough bits");
     }
 
@@ -722,24 +686,22 @@ static void pack_into_prepare(struct info_t *info_p,
     bitstream_writer_seek(writer_p, offset);
 }
 
-static mp_obj_t pack_into_finalize(struct bitstream_writer_bounds_t *bounds_p)
-{
+static mp_obj_t pack_into_finalize(struct bitstream_writer_bounds_t* bounds_p){
     bitstream_writer_bounds_restore(bounds_p);
 
     return mp_const_none;
 }
 
-static mp_obj_t pack_into(struct info_t *info_p,
+static mp_obj_t pack_into(struct info_t* info_p,
                           mp_obj_t buf_p,
                           mp_obj_t offset_p,
                           const mp_obj_t* args_p,
                           size_t consumed_args,
-                          size_t number_of_args)
-{
+                          size_t number_of_args){
     struct bitstream_writer_t writer;
     struct bitstream_writer_bounds_t bounds;
 
-    if ((number_of_args - consumed_args) < info_p->number_of_non_padding_fields) {
+    if((number_of_args - consumed_args) < info_p->number_of_non_padding_fields){
         mp_raise_ValueError("Too few arguments.");
     }
 
@@ -752,10 +714,9 @@ static mp_obj_t pack_into(struct info_t *info_p,
     return pack_into_finalize(&bounds);
 }
 
-static mp_obj_t unpack_from(struct info_t *info_p,
+static mp_obj_t unpack_from(struct info_t* info_p,
                             mp_obj_t data_p,
-                            mp_obj_t offset_p)
-{
+                            mp_obj_t offset_p){
     long offset;
 
     // raises TypeError, ValueError
@@ -765,15 +726,14 @@ static mp_obj_t unpack_from(struct info_t *info_p,
     return unpack(info_p, data_p, offset);
 }
 
-static void pack_dict_pack(struct info_t *info_p,
+static void pack_dict_pack(struct info_t* info_p,
                            mp_obj_t names_p,
                            mp_obj_t data_p,
-                           struct bitstream_writer_t *writer_p)
-{
+                           struct bitstream_writer_t* writer_p){
     mp_obj_t value_p;
     int i;
     int consumed_args;
-    struct field_info_t *field_p;
+    struct field_info_t* field_p;
 
     consumed_args = 0;
 
@@ -781,17 +741,17 @@ static void pack_dict_pack(struct info_t *info_p,
     mp_obj_t* items;
     mp_obj_list_get(names_p, &len, &items);
 
-    for (i = 0; i < info_p->number_of_fields; i++) {
+    for(i = 0; i < info_p->number_of_fields; i++){
         field_p = &info_p->fields[i];
 
-        if (field_p->is_padding) {
+        if(field_p->is_padding){
             value_p = mp_const_none;
-        } else {
+        }else{
             // raises KeyError
             value_p = mp_obj_dict_get(data_p, items[consumed_args]);
             consumed_args++;
 
-            if (value_p == mp_const_none) {
+            if(value_p == mp_const_none){
                 mp_raise_msg(&mp_type_KeyError, "Missing value.");
                 break;
             }
@@ -802,22 +762,21 @@ static void pack_dict_pack(struct info_t *info_p,
     }
 }
 
-static mp_obj_t pack_dict(struct info_t *info_p,
+static mp_obj_t pack_dict(struct info_t* info_p,
                           mp_obj_t names_p,
-                          mp_obj_t data_p)
-{
+                          mp_obj_t data_p){
     struct bitstream_writer_t writer;
     mp_obj_t packed_p;
 
 
-    if (((mp_obj_list_t*)MP_OBJ_TO_PTR(names_p))->len < info_p->number_of_non_padding_fields) {
+    if(((mp_obj_list_t*)MP_OBJ_TO_PTR(names_p))->len < info_p->number_of_non_padding_fields){
         mp_raise_ValueError("Too few names.");
     }
 
     // raises MemoryError
     packed_p = pack_prepare(info_p, &writer);
 
-    if (packed_p == mp_const_none) {
+    if(packed_p == mp_const_none){
         return mp_const_none;
     }
 
@@ -827,20 +786,19 @@ static mp_obj_t pack_dict(struct info_t *info_p,
     return packed_p;
 }
 
-static mp_obj_t unpack_dict(struct info_t *info_p,
+static mp_obj_t unpack_dict(struct info_t* info_p,
                             mp_obj_t names_p,
                             mp_obj_t data_p,
-                            long offset)
-{
+                            long offset){
     struct bitstream_reader_t reader;
     mp_obj_t unpacked_p;
     mp_obj_t value_p;
-    char *packed_p;
+    char* packed_p;
     int i;
     size_t size;
     int produced_args;
 
-    if (((mp_obj_list_t*)MP_OBJ_TO_PTR(names_p))->len < info_p->number_of_non_padding_fields) {
+    if(((mp_obj_list_t*)MP_OBJ_TO_PTR(names_p))->len < info_p->number_of_non_padding_fields){
         mp_raise_ValueError("Too few names.");
     }
 
@@ -850,11 +808,11 @@ static mp_obj_t unpack_dict(struct info_t *info_p,
     // raises TypeError
     packed_p = (char*)mp_obj_str_get_data(data_p, &size);
 
-    if (size < ((info_p->number_of_bits + offset + 7) / 8)) {
+    if(size < ((info_p->number_of_bits + offset + 7) / 8)){
         mp_raise_ValueError("Short data.");
     }
 
-    bitstream_reader_init(&reader, (uint8_t *)packed_p);
+    bitstream_reader_init(&reader, (uint8_t*)packed_p);
     bitstream_reader_seek(&reader, offset);
     produced_args = 0;
 
@@ -862,11 +820,11 @@ static mp_obj_t unpack_dict(struct info_t *info_p,
     mp_obj_t* names;
     mp_obj_list_get(names_p, &len, &names);
 
-    for (i = 0; i < info_p->number_of_fields; i++) {
+    for(i = 0; i < info_p->number_of_fields; i++){
         // raises MemoryError, OverflowError
         value_p = info_p->fields[i].unpack(&reader, &info_p->fields[i]);
 
-        if (value_p != mp_const_none) {
+        if(value_p != mp_const_none){
             // raises MemoryError
             mp_obj_dict_store(unpacked_p, names[produced_args], value_p);
             produced_args++;
@@ -876,11 +834,10 @@ static mp_obj_t unpack_dict(struct info_t *info_p,
     return unpacked_p;
 }
 
-static mp_obj_t unpack_from_dict(struct info_t *info_p,
+static mp_obj_t unpack_from_dict(struct info_t* info_p,
                                  mp_obj_t names_p,
                                  mp_obj_t data_p,
-                                 mp_obj_t offset_p)
-{
+                                 mp_obj_t offset_p){
     long offset;
 
     // raises TypeError, ValueError
@@ -890,12 +847,11 @@ static mp_obj_t unpack_from_dict(struct info_t *info_p,
     return unpack_dict(info_p, names_p, data_p, offset);
 }
 
-static mp_obj_t pack_into_dict(struct info_t *info_p,
+static mp_obj_t pack_into_dict(struct info_t* info_p,
                                mp_obj_t names_p,
                                mp_obj_t buf_p,
                                mp_obj_t offset_p,
-                               mp_obj_t data_p)
-{
+                               mp_obj_t data_p){
     struct bitstream_writer_t writer;
     struct bitstream_writer_bounds_t bounds;
 
@@ -908,8 +864,7 @@ static mp_obj_t pack_into_dict(struct info_t *info_p,
     return pack_into_finalize(&bounds);
 }
 
-static mp_obj_t calcsize(struct info_t *info_p)
-{
+static mp_obj_t calcsize(struct info_t* info_p){
     // raises MemoryError, OverflowError
     return mp_obj_new_int_from_ll(info_p->number_of_bits);
 }
@@ -944,33 +899,33 @@ typedef struct _bitstruct_CompiledFormatDict_obj_t{
     mp_obj_t names_p;
 }bitstruct_CompiledFormatDict_obj_t;
 
-mp_obj_t bitstruct_CompiledFormat_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args);
-STATIC void bitstruct_CompiledFormat_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind);
-STATIC mp_obj_t bitstruct_CompiledFormat_pack(size_t n_args, const mp_obj_t *args);
+mp_obj_t bitstruct_CompiledFormat_make_new(const mp_obj_type_t* type, size_t n_args, size_t n_kw, const mp_obj_t* args);
+STATIC void bitstruct_CompiledFormat_print(const mp_print_t* print, mp_obj_t self_in, mp_print_kind_t kind);
+STATIC mp_obj_t bitstruct_CompiledFormat_pack(size_t n_args, const mp_obj_t* args);
 STATIC mp_obj_t bitstruct_CompiledFormat_unpack(mp_obj_t self_in, mp_obj_t data);
-STATIC mp_obj_t bitstruct_CompiledFormat_pack_into(size_t n_args, const mp_obj_t *args, mp_map_t *kw_args);
-STATIC mp_obj_t bitstruct_CompiledFormat_unpack_from(size_t n_args, const mp_obj_t *args);
+STATIC mp_obj_t bitstruct_CompiledFormat_pack_into(size_t n_args, const mp_obj_t* args, mp_map_t* kw_args);
+STATIC mp_obj_t bitstruct_CompiledFormat_unpack_from(size_t n_args, const mp_obj_t* args);
 STATIC mp_obj_t bitstruct_CompiledFormat_calcsize(mp_obj_t self_in);
 
-mp_obj_t bitstruct_CompiledFormatDict_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args);
-STATIC void bitstruct_CompiledFormatDict_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind);
+mp_obj_t bitstruct_CompiledFormatDict_make_new(const mp_obj_type_t* type, size_t n_args, size_t n_kw, const mp_obj_t* args);
+STATIC void bitstruct_CompiledFormatDict_print(const mp_print_t* print, mp_obj_t self_in, mp_print_kind_t kind);
 STATIC mp_obj_t bitstruct_CompiledFormatDict_pack(mp_obj_t self_in, mp_obj_t data);
 STATIC mp_obj_t bitstruct_CompiledFormatDict_unpack(mp_obj_t self_in, mp_obj_t data);
-STATIC mp_obj_t bitstruct_CompiledFormatDict_pack_into(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args);
-STATIC mp_obj_t bitstruct_CompiledFormatDict_unpack_from(size_t n_args, const mp_obj_t *args);
+STATIC mp_obj_t bitstruct_CompiledFormatDict_pack_into(size_t n_args, const mp_obj_t* pos_args, mp_map_t* kw_args);
+STATIC mp_obj_t bitstruct_CompiledFormatDict_unpack_from(size_t n_args, const mp_obj_t* args);
 STATIC mp_obj_t bitstruct_CompiledFormatDict_calcsize(mp_obj_t self_in);
 
-STATIC mp_obj_t bitstruct_pack(size_t n_args, const mp_obj_t *args);
+STATIC mp_obj_t bitstruct_pack(size_t n_args, const mp_obj_t* args);
 STATIC mp_obj_t bitstruct_unpack(mp_obj_t format, mp_obj_t data);
-STATIC mp_obj_t bitstruct_pack_into(size_t n_args, const mp_obj_t *args, mp_map_t *kw_args);
-STATIC mp_obj_t bitstruct_unpack_from(size_t n_args, const mp_obj_t *args);
+STATIC mp_obj_t bitstruct_pack_into(size_t n_args, const mp_obj_t* args, mp_map_t* kw_args);
+STATIC mp_obj_t bitstruct_unpack_from(size_t n_args, const mp_obj_t* args);
 STATIC mp_obj_t bitstruct_pack_dict(mp_obj_t format, mp_obj_t names, mp_obj_t data);
 STATIC mp_obj_t bitstruct_unpack_dict(mp_obj_t format, mp_obj_t names, mp_obj_t data);
-STATIC mp_obj_t bitstruct_pack_into_dict(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args);
-STATIC mp_obj_t bitstruct_unpack_from_dict(size_t n_args, const mp_obj_t *args);
+STATIC mp_obj_t bitstruct_pack_into_dict(size_t n_args, const mp_obj_t* pos_args, mp_map_t* kw_args);
+STATIC mp_obj_t bitstruct_unpack_from_dict(size_t n_args, const mp_obj_t* args);
 STATIC mp_obj_t bitstruct_calcsize(mp_obj_t format);
-STATIC mp_obj_t bitstruct_byteswap(size_t n_args, const mp_obj_t *args);
-STATIC mp_obj_t bitstruct_compile(size_t n_args, const mp_obj_t *args);
+STATIC mp_obj_t bitstruct_byteswap(size_t n_args, const mp_obj_t* args);
+STATIC mp_obj_t bitstruct_compile(size_t n_args, const mp_obj_t* args);
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR(bitstruct_CompiledFormat_pack_fun_obj, 1, bitstruct_CompiledFormat_pack);
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(bitstruct_CompiledFormat_unpack_fun_obj, bitstruct_CompiledFormat_unpack);
@@ -1050,14 +1005,14 @@ const mp_obj_type_t bitstruct_CompiledFormatDict_type={
  * Python: bitstruct.CompiledFormat(fmt)
  * @param fmt
  */
-mp_obj_t bitstruct_CompiledFormat_make_new(const mp_obj_type_t *type,
+mp_obj_t bitstruct_CompiledFormat_make_new(const mp_obj_type_t* type,
                                            size_t n_args,
                                            size_t n_kw,
-                                           const mp_obj_t *args){
+                                           const mp_obj_t* args){
     mp_arg_check_num(n_args, n_kw, 1, 1, false);
 
     // raises MemoryError
-    bitstruct_CompiledFormat_obj_t *self = m_new_obj(bitstruct_CompiledFormat_obj_t);
+    bitstruct_CompiledFormat_obj_t* self = m_new_obj(bitstruct_CompiledFormat_obj_t);
 
     self->base.type = &bitstruct_CompiledFormat_type;
 
@@ -1071,9 +1026,9 @@ mp_obj_t bitstruct_CompiledFormat_make_new(const mp_obj_type_t *type,
  * Python: print(bitstruct.CompiledFormat(fmt))
  * @param obj
  */
-STATIC void bitstruct_CompiledFormat_print(const mp_print_t *print,
-                                           mp_obj_t self_in,mp_print_kind_t kind){
-    bitstruct_CompiledFormat_obj_t *self = MP_OBJ_TO_PTR(self_in);
+STATIC void bitstruct_CompiledFormat_print(const mp_print_t* print,
+                                           mp_obj_t self_in, mp_print_kind_t kind){
+    bitstruct_CompiledFormat_obj_t* self = MP_OBJ_TO_PTR(self_in);
     mp_printf(print, "CompiledFormat(bits=%d, fields=%d, padding_fields=%d)",
               self->info_p->number_of_bits,
               self->info_p->number_of_fields,
@@ -1086,8 +1041,8 @@ STATIC void bitstruct_CompiledFormat_print(const mp_print_t *print,
  * @param self
  * @param args*
  */
-STATIC mp_obj_t bitstruct_CompiledFormat_pack(size_t n_args, const mp_obj_t *args){
-    bitstruct_CompiledFormat_obj_t *self = MP_OBJ_TO_PTR(args[0]);
+STATIC mp_obj_t bitstruct_CompiledFormat_pack(size_t n_args, const mp_obj_t* args){
+    bitstruct_CompiledFormat_obj_t* self = MP_OBJ_TO_PTR(args[0]);
 
     // raises MemoryError, ValueError
     return pack(self->info_p, &args[1], 0, n_args - 1);
@@ -1099,7 +1054,7 @@ STATIC mp_obj_t bitstruct_CompiledFormat_pack(size_t n_args, const mp_obj_t *arg
  * @param data
  */
 STATIC mp_obj_t bitstruct_CompiledFormat_unpack(mp_obj_t self_in, mp_obj_t data){
-    bitstruct_CompiledFormat_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    bitstruct_CompiledFormat_obj_t* self = MP_OBJ_TO_PTR(self_in);
 
     // raises MemoryError, OverflowError, TypeError, ValueError
     return unpack(self->info_p, data, 0);
@@ -1113,8 +1068,8 @@ STATIC mp_obj_t bitstruct_CompiledFormat_unpack(mp_obj_t self_in, mp_obj_t data)
  * @param args*
  * @param kwargs: fill_padding = true
  */
-STATIC mp_obj_t bitstruct_CompiledFormat_pack_into(size_t n_args, const mp_obj_t *args, mp_map_t *kw_args){
-    bitstruct_CompiledFormat_obj_t *self = MP_OBJ_TO_PTR(args[0]);
+STATIC mp_obj_t bitstruct_CompiledFormat_pack_into(size_t n_args, const mp_obj_t* args, mp_map_t* kw_args){
+    bitstruct_CompiledFormat_obj_t* self = MP_OBJ_TO_PTR(args[0]);
 
     bool fill_padding = fill_pading_from_kwarg(kw_args);
     (void)fill_padding;
@@ -1129,8 +1084,8 @@ STATIC mp_obj_t bitstruct_CompiledFormat_pack_into(size_t n_args, const mp_obj_t
  * @param data
  * @param opt: offset = 0
  */
-STATIC mp_obj_t bitstruct_CompiledFormat_unpack_from(size_t n_args, const mp_obj_t *args){
-    bitstruct_CompiledFormat_obj_t *self = MP_OBJ_TO_PTR(args[0]);
+STATIC mp_obj_t bitstruct_CompiledFormat_unpack_from(size_t n_args, const mp_obj_t* args){
+    bitstruct_CompiledFormat_obj_t* self = MP_OBJ_TO_PTR(args[0]);
 
     // raises OverflowError
     mp_obj_t offset = mp_obj_new_int(0);
@@ -1146,7 +1101,7 @@ STATIC mp_obj_t bitstruct_CompiledFormat_unpack_from(size_t n_args, const mp_obj
  * @param self
  */
 STATIC mp_obj_t bitstruct_CompiledFormat_calcsize(mp_obj_t self_in){
-    bitstruct_CompiledFormat_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    bitstruct_CompiledFormat_obj_t* self = MP_OBJ_TO_PTR(self_in);
     return calcsize(self->info_p);
 }
 
@@ -1155,14 +1110,14 @@ STATIC mp_obj_t bitstruct_CompiledFormat_calcsize(mp_obj_t self_in){
  * @param fmt
  * @param opt: names = None
  */
-mp_obj_t bitstruct_CompiledFormatDict_make_new(const mp_obj_type_t *type,
+mp_obj_t bitstruct_CompiledFormatDict_make_new(const mp_obj_type_t* type,
                                                size_t n_args,
                                                size_t n_kw,
-                                               const mp_obj_t *args){
+                                               const mp_obj_t* args){
     mp_arg_check_num(n_args, n_kw, 1, 2, true);
 
     // raises MemoryError
-    bitstruct_CompiledFormatDict_obj_t *self = m_new_obj(bitstruct_CompiledFormatDict_obj_t);
+    bitstruct_CompiledFormatDict_obj_t* self = m_new_obj(bitstruct_CompiledFormatDict_obj_t);
 
     self->base.type = &bitstruct_CompiledFormatDict_type;
 
@@ -1183,9 +1138,9 @@ mp_obj_t bitstruct_CompiledFormatDict_make_new(const mp_obj_type_t *type,
  * Python: print(bitstruct.CompiledFormatDict(fmt))
  * @param obj
  */
-STATIC void bitstruct_CompiledFormatDict_print(const mp_print_t *print,
+STATIC void bitstruct_CompiledFormatDict_print(const mp_print_t* print,
                                                mp_obj_t self_in,mp_print_kind_t kind){
-    bitstruct_CompiledFormatDict_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    bitstruct_CompiledFormatDict_obj_t* self = MP_OBJ_TO_PTR(self_in);
     mp_printf(print, "CompiledFormat(bits=%d, fields=%d, padding_fields=%d, names=",
               self->info_p->number_of_bits,
               self->info_p->number_of_fields,
@@ -1217,7 +1172,7 @@ STATIC void bitstruct_CompiledFormatDict_print(const mp_print_t *print,
  * @param data
  */
 STATIC mp_obj_t bitstruct_CompiledFormatDict_pack(mp_obj_t self_in, mp_obj_t data){
-    bitstruct_CompiledFormatDict_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    bitstruct_CompiledFormatDict_obj_t* self = MP_OBJ_TO_PTR(self_in);
 
     // raises KeyError, MemoryError, NotImplementedError, OverflowError, ValueError
     return pack_dict(self->info_p, self->names_p, data);
@@ -1229,7 +1184,7 @@ STATIC mp_obj_t bitstruct_CompiledFormatDict_pack(mp_obj_t self_in, mp_obj_t dat
  * @param data
  */
 STATIC mp_obj_t bitstruct_CompiledFormatDict_unpack(mp_obj_t self_in, mp_obj_t data){
-    bitstruct_CompiledFormatDict_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    bitstruct_CompiledFormatDict_obj_t* self = MP_OBJ_TO_PTR(self_in);
 
     // raises MemoryError, OverflowError, TypeError, ValueError
     return unpack_dict(self->info_p, self->names_p, data, 0);
@@ -1243,8 +1198,8 @@ STATIC mp_obj_t bitstruct_CompiledFormatDict_unpack(mp_obj_t self_in, mp_obj_t d
  * @param data
  * @param kwargs: fill_padding = true
  */
-STATIC mp_obj_t bitstruct_CompiledFormatDict_pack_into(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args){
-    bitstruct_CompiledFormatDict_obj_t *self = MP_OBJ_TO_PTR(pos_args[0]);
+STATIC mp_obj_t bitstruct_CompiledFormatDict_pack_into(size_t n_args, const mp_obj_t* pos_args, mp_map_t* kw_args){
+    bitstruct_CompiledFormatDict_obj_t* self = MP_OBJ_TO_PTR(pos_args[0]);
 
     bool fill_padding = fill_pading_from_kwarg(kw_args);
     (void)fill_padding;
@@ -1259,8 +1214,8 @@ STATIC mp_obj_t bitstruct_CompiledFormatDict_pack_into(size_t n_args, const mp_o
  * @param data
  * @param opt: offset = 0
  */
-STATIC mp_obj_t bitstruct_CompiledFormatDict_unpack_from(size_t n_args, const mp_obj_t *args){
-    bitstruct_CompiledFormatDict_obj_t *self = MP_OBJ_TO_PTR(args[0]);
+STATIC mp_obj_t bitstruct_CompiledFormatDict_unpack_from(size_t n_args, const mp_obj_t* args){
+    bitstruct_CompiledFormatDict_obj_t* self = MP_OBJ_TO_PTR(args[0]);
 
     // raises OverflowError
     mp_obj_t offset = mp_obj_new_int(0);
@@ -1276,7 +1231,7 @@ STATIC mp_obj_t bitstruct_CompiledFormatDict_unpack_from(size_t n_args, const mp
  * @param self
  */
 STATIC mp_obj_t bitstruct_CompiledFormatDict_calcsize(mp_obj_t self_in){
-    bitstruct_CompiledFormatDict_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    bitstruct_CompiledFormatDict_obj_t* self = MP_OBJ_TO_PTR(self_in);
     return calcsize(self->info_p);
 }
 
@@ -1285,9 +1240,9 @@ STATIC mp_obj_t bitstruct_CompiledFormatDict_calcsize(mp_obj_t self_in){
  * @param fmt
  * @param args*
  */
-STATIC mp_obj_t bitstruct_pack(size_t n_args, const mp_obj_t *args){
+STATIC mp_obj_t bitstruct_pack(size_t n_args, const mp_obj_t* args){
     mp_obj_t packed_p;
-    struct info_t *info_p;
+    struct info_t* info_p;
 
     // raises MemoryError, NotImplementedError, TypeError, ValueError
     info_p = parse_format(args[0]);
@@ -1306,7 +1261,7 @@ STATIC mp_obj_t bitstruct_pack(size_t n_args, const mp_obj_t *args){
  */
 STATIC mp_obj_t bitstruct_unpack(mp_obj_t format, mp_obj_t data){
     mp_obj_t unpacked_p;
-    struct info_t *info_p;
+    struct info_t* info_p;
 
     // raises MemoryError, NotImplementedError, TypeError, ValueError
     info_p = parse_format(format);
@@ -1326,9 +1281,9 @@ STATIC mp_obj_t bitstruct_unpack(mp_obj_t format, mp_obj_t data){
  * @param args*
  * @param kwargs: fill_padding = true
  */
-STATIC mp_obj_t bitstruct_pack_into(size_t n_args, const mp_obj_t *args, mp_map_t *kw_args){
+STATIC mp_obj_t bitstruct_pack_into(size_t n_args, const mp_obj_t* args, mp_map_t* kw_args){
     mp_obj_t res_p;
-    struct info_t *info_p;
+    struct info_t* info_p;
 
     bool fill_padding = fill_pading_from_kwarg(kw_args);
     (void)fill_padding;
@@ -1354,9 +1309,9 @@ STATIC mp_obj_t bitstruct_pack_into(size_t n_args, const mp_obj_t *args, mp_map_
  * @param data
  * @param opt: offset = 0
  */
-STATIC mp_obj_t bitstruct_unpack_from(size_t n_args, const mp_obj_t *args){
+STATIC mp_obj_t bitstruct_unpack_from(size_t n_args, const mp_obj_t* args){
     mp_obj_t unpacked_p;
-    struct info_t *info_p;
+    struct info_t* info_p;
 
     // raises OverflowError
     mp_obj_t offset = mp_obj_new_int(0);
@@ -1381,7 +1336,7 @@ STATIC mp_obj_t bitstruct_unpack_from(size_t n_args, const mp_obj_t *args){
  */
 STATIC mp_obj_t bitstruct_pack_dict(mp_obj_t format, mp_obj_t names, mp_obj_t data){
     mp_obj_t packed_p;
-    struct info_t *info_p;
+    struct info_t* info_p;
 
     // raises MemoryError, NotImplementedError, TypeError, ValueError
     info_p = parse_format(format);
@@ -1404,7 +1359,7 @@ STATIC mp_obj_t bitstruct_pack_dict(mp_obj_t format, mp_obj_t names, mp_obj_t da
  */
 STATIC mp_obj_t bitstruct_unpack_dict(mp_obj_t format, mp_obj_t names, mp_obj_t data){
     mp_obj_t unpacked_p;
-    struct info_t *info_p;
+    struct info_t* info_p;
 
     // raises MemoryError, NotImplementedError, TypeError, ValueError
     info_p = parse_format(format);
@@ -1428,9 +1383,9 @@ STATIC mp_obj_t bitstruct_unpack_dict(mp_obj_t format, mp_obj_t names, mp_obj_t 
  * @param data
  * @param kwargs: fill_padding = true
  */
-STATIC mp_obj_t bitstruct_pack_into_dict(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args){
+STATIC mp_obj_t bitstruct_pack_into_dict(size_t n_args, const mp_obj_t* pos_args, mp_map_t* kw_args){
     mp_obj_t res_p;
-    struct info_t *info_p;
+    struct info_t* info_p;
 
     bool fill_padding = fill_pading_from_kwarg(kw_args);
     (void)fill_padding;
@@ -1455,9 +1410,9 @@ STATIC mp_obj_t bitstruct_pack_into_dict(size_t n_args, const mp_obj_t *pos_args
  * @param data
  * @param opt: offset = 0
  */
-STATIC mp_obj_t bitstruct_unpack_from_dict(size_t n_args, const mp_obj_t *args){
+STATIC mp_obj_t bitstruct_unpack_from_dict(size_t n_args, const mp_obj_t* args){
     mp_obj_t unpacked_p;
-    struct info_t *info_p;
+    struct info_t* info_p;
 
     // raises OverflowError
     mp_obj_t offset = mp_obj_new_int(0);
@@ -1484,7 +1439,7 @@ STATIC mp_obj_t bitstruct_unpack_from_dict(size_t n_args, const mp_obj_t *args){
  */
 STATIC mp_obj_t bitstruct_calcsize(mp_obj_t format){
     // raises MemoryError, NotImplementedError, TypeError, ValueError
-    struct info_t *info_p = parse_format(format);
+    struct info_t* info_p = parse_format(format);
 
     // raises MemoryError, OverflowError
     mp_obj_t size = calcsize(info_p);
@@ -1499,10 +1454,10 @@ STATIC mp_obj_t bitstruct_calcsize(mp_obj_t format){
  * @param data
  * @param opt: offset = 0
  */
-STATIC mp_obj_t bitstruct_byteswap(size_t n_args, const mp_obj_t *args){
-    const char *c_format_p;
-    uint8_t *src_p;
-    uint8_t *dst_p;
+STATIC mp_obj_t bitstruct_byteswap(size_t n_args, const mp_obj_t* args){
+    const char* c_format_p;
+    uint8_t* src_p;
+    uint8_t* dst_p;
     size_t size;
     int offset = 0;
 
@@ -1520,11 +1475,10 @@ STATIC mp_obj_t bitstruct_byteswap(size_t n_args, const mp_obj_t *args){
     // raises MemoryError
     dst_p = alloca(size);
 
-    while (*c_format_p != '\0') {
-        switch (*c_format_p) {
-
+    while(*c_format_p != '\0'){
+        switch(*c_format_p){
         case '1':
-            if ((size - offset) < 1) {
+            if((size - offset) < 1){
                 goto out1;
             }
 
@@ -1533,7 +1487,7 @@ STATIC mp_obj_t bitstruct_byteswap(size_t n_args, const mp_obj_t *args){
             break;
 
         case '2':
-            if ((size - offset) < 2) {
+            if((size - offset) < 2){
                 goto out1;
             }
 
@@ -1543,7 +1497,7 @@ STATIC mp_obj_t bitstruct_byteswap(size_t n_args, const mp_obj_t *args){
             break;
 
         case '4':
-            if ((size - offset) < 4) {
+            if((size - offset) < 4){
                 goto out1;
             }
 
@@ -1555,7 +1509,7 @@ STATIC mp_obj_t bitstruct_byteswap(size_t n_args, const mp_obj_t *args){
             break;
 
         case '8':
-            if ((size - offset) < 8) {
+            if((size - offset) < 8){
                 goto out1;
             }
 
@@ -1592,7 +1546,7 @@ out1:
  * @param fmt
  * @param opt: names = None
  */
-STATIC mp_obj_t bitstruct_compile(size_t n_args, const mp_obj_t *args){
+STATIC mp_obj_t bitstruct_compile(size_t n_args, const mp_obj_t* args){
     if(n_args == 1){
         // raises MemoryError, NotImplementedError, TypeError, ValueError
         return bitstruct_CompiledFormat_make_new(&mp_type_NoneType, n_args, 0, args);
