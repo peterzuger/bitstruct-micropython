@@ -7,24 +7,26 @@
 + [module documentation](https://bitstruct.readthedocs.io/en/latest/)
 
 ## About <a name = "about"></a>
-This is a port of [eerimoq/bitstruct][1] for [micropython][2]
+This is a port of [eerimoq/bitstruct](https://github.com/eerimoq/bitstruct) for
+[micropython](https://github.com/micropython/micropython)
 
 ## Getting Started <a name = "getting_started"></a>
 
 ### Prerequisites
-This port of [eerimoq/bitstruct][1] is designed for [micropython][2]
+This port of [eerimoq/bitstruct](https://github.com/eerimoq/bitstruct) is designed for
+[micropython](https://github.com/micropython/micropython)
 
 ```
 git clone --recurse-submodules https://github.com/micropython/micropython.git
 ```
 
-to compile the project, [make][4],
-[gcc][5] and [arm-none-eabi-gcc][5] is required,
+to compile the project, [make](https://www.gnu.org/software/make/),
+[gcc](https://gcc.gnu.org/) and [arm-none-eabi-gcc](https://gcc.gnu.org/) is required,
 install them from your package manager
 
 ### Installing
-[bitstruct-micropython][0] should work on any micropython port,
-to make the required changes, move to the directory of your required port.
+[bitstruct-micropython](https://github.com/peterzuger/bitstruct-micropython) should work on
+any micropython port, to make the required changes, move to the directory of your required port.
 
 The first step of the installation is to move this project to the folder of your port.
 
@@ -83,14 +85,7 @@ The module is available by just importing bitstruct:
 import bitstruct
 ```
 
-The module documentation is available here: [Documentation][3].
+The module documentation is available here: [Documentation](https://bitstruct.readthedocs.io/en/latest/).
 Keep in mind that this C port is Work in progress, while most features are working,
 there are still a few missing things most notably the missing kwarg support,
 this is one of the next things on the todo list.
-
-[0]:(https://github.com/peterzuger/bitstruct-micropython)
-[1]:(https://github.com/eerimoq/bitstruct)
-[2]:(https://github.com/eerimoq/bitstruct)
-[3]:(https://bitstruct.readthedocs.io/en/latest/)
-[4]:(https://www.gnu.org/software/make/)
-[5]:(https://gcc.gnu.org/)
