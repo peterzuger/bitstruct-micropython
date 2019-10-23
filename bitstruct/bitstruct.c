@@ -934,7 +934,7 @@ mp_obj_t bitstruct_CompiledFormat_make_new(const mp_obj_type_t *type, size_t n_a
 STATIC void bitstruct_CompiledFormat_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind);
 STATIC mp_obj_t bitstruct_CompiledFormat_pack(size_t n_args, const mp_obj_t *args);
 STATIC mp_obj_t bitstruct_CompiledFormat_unpack(mp_obj_t self_in, mp_obj_t data);
-STATIC mp_obj_t bitstruct_CompiledFormat_pack_into(size_t n_args, const mp_obj_t *args);
+STATIC mp_obj_t bitstruct_CompiledFormat_pack_into(size_t n_args, const mp_obj_t *args, mp_map_t *kw_args);
 STATIC mp_obj_t bitstruct_CompiledFormat_unpack_from(size_t n_args, const mp_obj_t *args);
 STATIC mp_obj_t bitstruct_CompiledFormat_calcsize(mp_obj_t self_in);
 
@@ -948,7 +948,7 @@ STATIC mp_obj_t bitstruct_CompiledFormatDict_calcsize(mp_obj_t self_in);
 
 STATIC mp_obj_t bitstruct_pack(size_t n_args, const mp_obj_t *args);
 STATIC mp_obj_t bitstruct_unpack(mp_obj_t format, mp_obj_t data);
-STATIC mp_obj_t bitstruct_pack_into(size_t n_args, const mp_obj_t *args);
+STATIC mp_obj_t bitstruct_pack_into(size_t n_args, const mp_obj_t *args, mp_map_t *kw_args);
 STATIC mp_obj_t bitstruct_unpack_from(size_t n_args, const mp_obj_t *args);
 STATIC mp_obj_t bitstruct_pack_dict(mp_obj_t format, mp_obj_t names, mp_obj_t data);
 STATIC mp_obj_t bitstruct_unpack_dict(mp_obj_t format, mp_obj_t names, mp_obj_t data);
@@ -960,7 +960,7 @@ STATIC mp_obj_t bitstruct_compile(size_t n_args, const mp_obj_t *args);
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR(bitstruct_CompiledFormat_pack_fun_obj, 1, bitstruct_CompiledFormat_pack);
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(bitstruct_CompiledFormat_unpack_fun_obj, bitstruct_CompiledFormat_unpack);
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR(bitstruct_CompiledFormat_pack_into_fun_obj, 3, bitstruct_CompiledFormat_pack_into);
+STATIC MP_DEFINE_CONST_FUN_OBJ_KW(bitstruct_CompiledFormat_pack_into_fun_obj, 3, bitstruct_CompiledFormat_pack_into);
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(bitstruct_CompiledFormat_unpack_from_fun_obj, 2, 3,
                                            bitstruct_CompiledFormat_unpack_from);
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(bitstruct_CompiledFormat_calcsize_fun_obj, bitstruct_CompiledFormat_calcsize);
@@ -974,7 +974,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(bitstruct_CompiledFormatDict_calcsize_fun_obj, 
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR(bitstruct_pack_fun_obj, 1, bitstruct_pack);
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(bitstruct_unpack_fun_obj, bitstruct_unpack);
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR(bitstruct_pack_into_fun_obj, 3, bitstruct_pack_into);
+STATIC MP_DEFINE_CONST_FUN_OBJ_KW(bitstruct_pack_into_fun_obj, 3, bitstruct_pack_into);
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(bitstruct_unpack_from_fun_obj, 2, 3, bitstruct_unpack_from);
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(bitstruct_pack_dict_fun_obj, bitstruct_pack_dict);
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(bitstruct_unpack_dict_fun_obj, bitstruct_unpack_dict);
@@ -1097,8 +1097,9 @@ STATIC mp_obj_t bitstruct_CompiledFormat_unpack(mp_obj_t self_in, mp_obj_t data)
  * @param buf
  * @param offset
  * @param args*
+ * @param kwargs: fill_padding = true
  */
-STATIC mp_obj_t bitstruct_CompiledFormat_pack_into(size_t n_args, const mp_obj_t *args){
+STATIC mp_obj_t bitstruct_CompiledFormat_pack_into(size_t n_args, const mp_obj_t *args, mp_map_t *kw_args){
     bitstruct_CompiledFormat_obj_t *self = MP_OBJ_TO_PTR(args[0]);
 
     // raises NotImplementedError, OverflowError, TypeError, ValueError
@@ -1305,7 +1306,7 @@ STATIC mp_obj_t bitstruct_unpack(mp_obj_t format, mp_obj_t data){
  * @param args*
  * @param kwargs: fill_padding = true
  */
-STATIC mp_obj_t bitstruct_pack_into(size_t n_args, const mp_obj_t *args){
+STATIC mp_obj_t bitstruct_pack_into(size_t n_args, const mp_obj_t *args, mp_map_t *kw_args){
     mp_obj_t res_p;
     struct info_t *info_p;
 
