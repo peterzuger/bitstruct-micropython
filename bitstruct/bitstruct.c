@@ -1343,7 +1343,7 @@ STATIC mp_obj_t bitstruct_unpack_from(size_t n_args, const mp_obj_t *args){
     info_p = parse_format(args[0]);
 
     // raises MemoryError, OverflowError, TypeError, ValueError
-    unpacked_p = unpack_from(info_p, args[2], offset);
+    unpacked_p = unpack_from(info_p, args[1], offset);
     gc_free(info_p);
 
     return unpacked_p;
