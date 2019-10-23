@@ -914,6 +914,20 @@ static mp_obj_t calcsize(struct info_t *info_p)
     return mp_obj_new_int_from_ll(info_p->number_of_bits);
 }
 
+static bool fill_pading_from_kwarg(mp_map_t* kw_args){
+    static const mp_arg_t allowed_args[] = {
+        { MP_QSTR_fill_padding, MP_ARG_KW_ONLY | MP_ARG_BOOL, {.u_bool = true} },
+    };
+
+    // parse args
+    struct{
+        mp_arg_val_t fill_padding;
+    }args;
+    mp_arg_parse_all(0, NULL, kw_args,
+                     MP_ARRAY_SIZE(allowed_args), allowed_args, (mp_arg_val_t*)&args);
+    return args.fill_padding.u_bool;
+}
+
 
 typedef struct _bitstruct_CompiledFormat_obj_t{
     // base represents some basic information, like type
