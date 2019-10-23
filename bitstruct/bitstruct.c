@@ -552,7 +552,7 @@ static uint8_t* pack_prepare(struct info_t* info_p,
     uint8_t* data;
 
     // raises MemoryError
-    data = m_new(uint8_t, (info_p->number_of_bits + 7) / 8);
+    data = gc_alloc((info_p->number_of_bits + 7) / 8, 0);
 
     bitstream_writer_init(writer_p, data);
 
@@ -766,22 +766,20 @@ static mp_obj_t pack_dict(struct info_t* info_p,
                           mp_obj_t names_p,
                           mp_obj_t data_p){
     struct bitstream_writer_t writer;
-    mp_obj_t packed_p;
-
 
     if(((mp_obj_list_t*)MP_OBJ_TO_PTR(names_p))->len < info_p->number_of_non_padding_fields){
         mp_raise_ValueError("Too few names.");
     }
 
     // raises MemoryError
-    packed_p = pack_prepare(info_p, &writer);
-
-    if(packed_p == mp_const_none){
-        return mp_const_none;
-    }
+    uint8_t* data = pack_prepare(info_p, &writer);
 
     // raises KeyError, NotImplementedError, OverflowError, TypeError
     pack_dict_pack(info_p, names_p, data_p, &writer);
+
+    // raises MemoryError
+    mp_obj_t packed_p = mp_obj_new_bytes(data, (info_p->number_of_bits + 7) / 8);
+    gc_free(data);
 
     return packed_p;
 }

@@ -653,9 +653,8 @@ class BitStructTest(unittest.TestCase):
         fmt = 'u1u1s6u7u9'
         names = ['foo', 'bar', 'fie', 'fum', 'fam']
 
-        # # TODO: segmentation fault
-        # self.assertEqual(pack_dict(fmt, names, unpacked), packed)
-        # self.assertEqual(unpack_dict(fmt, names, packed), unpacked)
+        self.assertEqual(pack_dict(fmt, names, unpacked), packed)
+        self.assertEqual(unpack_dict(fmt, names, packed), unpacked)
 
     def test_pack_into_unpack_from_dict(self):
         unpacked = {
