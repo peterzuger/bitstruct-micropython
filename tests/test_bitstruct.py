@@ -179,7 +179,7 @@ class BitStructTest(unittest.TestCase):
         with self.assertRaises(NotImplementedError) as cm:
             unpack('f33', b'\x00\x00\x00\x00\x00')
 
-        self.assertEqual(str(cm.exception), 'Float not 32 bits.')
+        self.assertEqual(str(cm.exception), 'Float size not supported.')
 
         # Too many bits to unpack.
         with self.assertRaises(ValueError) as cm:
@@ -420,12 +420,12 @@ class BitStructTest(unittest.TestCase):
         with self.assertRaises(NotImplementedError) as cm:
             pack('f31', 1.0)
 
-        self.assertEqual(str(cm.exception), 'Float not 32 bits.')
+        self.assertEqual(str(cm.exception), 'Float size not supported.')
 
         with self.assertRaises(NotImplementedError) as cm:
             unpack('f33', 8 * b'\x00')
 
-        self.assertEqual(str(cm.exception), 'Float not 32 bits.')
+        self.assertEqual(str(cm.exception), 'Float size not supported.')
 
     def test_bad_format(self):
         """Test of bad format.
