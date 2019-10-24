@@ -153,6 +153,37 @@ static mp_obj_t unpack_unsigned_integer(struct bitstream_reader_t* self_p,
     return mp_obj_new_int_from_ull(value);
 }
 
+#if defined(_Float16)
+
+static void pack_float_16(struct bitstream_writer_t* self_p,
+                          mp_obj_t value_p,
+                          struct field_info_t* field_info_p){
+    // relies on sizeof(float) == 4 this is always the case with gcc
+    _Float16 value;
+    uint16_t data;
+
+    // raises TypeError
+    value = (_Float16)mp_obj_get_float(value_p);
+    memcpy(&data, &value, sizeof(data));
+    bitstream_writer_write_u16(self_p, data);
+}
+
+static mp_obj_t unpack_float_16(struct bitstream_reader_t* self_p,
+                                struct field_info_t* field_info_p){
+    // relies on sizeof(float) == 4 this is always the case with gcc
+    _Float16 value;
+    uint16_t data;
+
+    data = (_Float16)bitstream_reader_read_u16(self_p);
+    memcpy(&value, &data, sizeof(data));
+
+    return mp_obj_new_float((mp_float_t)value);
+}
+
+#endif /* defined(_Float16) */
+
+#if __SIZEOF_FLOAT__ == 4
+
 static void pack_float_32(struct bitstream_writer_t* self_p,
                           mp_obj_t value_p,
                           struct field_info_t* field_info_p){
@@ -177,6 +208,8 @@ static mp_obj_t unpack_float_32(struct bitstream_reader_t* self_p,
 
     return mp_obj_new_float((mp_float_t)value);
 }
+
+#endif /* __SIZEOF_FLOAT__ == 4 */
 
 #if __SIZEOF_DOUBLE__ == 8
 
@@ -350,10 +383,19 @@ static void field_info_init_unsigned(struct field_info_t* self_p,
 static void field_info_init_float(struct field_info_t* self_p,
                                   int number_of_bits){
     switch(number_of_bits){
+#if defined(_Float16)
+    case 16:
+        self_p->pack = pack_float_16;
+        self_p->unpack = unpack_float_16;
+        break;
+#endif /* defined(_Float16) */
+
+#if __SIZEOF_FLOAT__ == 4
     case 32:
         self_p->pack = pack_float_32;
         self_p->unpack = unpack_float_32;
         break;
+#endif /* __SIZEOF_FLOAT__ == 4 */
 
 #if __SIZEOF_DOUBLE__ == 8
     case 64:
