@@ -178,6 +178,33 @@ static mp_obj_t unpack_float_32(struct bitstream_reader_t* self_p,
     return mp_obj_new_float((mp_float_t)value);
 }
 
+#if __SIZEOF_DOUBLE__ == 8
+
+static void pack_float_64(struct bitstream_writer_t* self_p,
+                          mp_obj_t value_p,
+                          struct field_info_t* field_info_p){
+    double value;
+    uint64_t data;
+
+    // raises TypeError
+    value = (double)mp_obj_get_float(value_p);
+    memcpy(&data, &value, sizeof(data));
+    bitstream_writer_write_u64(self_p, data);
+}
+
+static mp_obj_t unpack_float_64(struct bitstream_reader_t* self_p,
+                                struct field_info_t* field_info_p){
+    double value;
+    uint64_t data;
+
+    data = (double)bitstream_reader_read_u64(self_p);
+    memcpy(&value, &data, sizeof(data));
+
+    return mp_obj_new_float((mp_float_t)value);
+}
+
+#endif /* __SIZEOF_DOUBLE__ == 8 */
+
 static void pack_bool(struct bitstream_writer_t* self_p,
                       mp_obj_t value_p,
                       struct field_info_t* field_info_p){
@@ -328,8 +355,15 @@ static void field_info_init_float(struct field_info_t* self_p,
         self_p->unpack = unpack_float_32;
         break;
 
+#if __SIZEOF_DOUBLE__ == 8
+    case 64:
+        self_p->pack = pack_float_64;
+        self_p->unpack = unpack_float_64;
+        break;
+#endif /* __SIZEOF_DOUBLE__ == 8 */
+
     default:
-        mp_raise_NotImplementedError("Float not 32 bits.");
+        mp_raise_NotImplementedError("Float size not supported.");
     }
 }
 

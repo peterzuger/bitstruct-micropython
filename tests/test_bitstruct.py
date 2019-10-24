@@ -71,8 +71,8 @@ class BitStructTest(unittest.TestCase):
         packed = pack('f32', 1.0)
         self.assertEqual(packed, b'\x3f\x80\x00\x00')
 
-        # packed = pack('f64', 1.0)
-        # self.assertEqual(packed, b'\x3f\xf0\x00\x00\x00\x00\x00\x00')
+        packed = pack('f64', 1.0)
+        self.assertEqual(packed, b'\x3f\xf0\x00\x00\x00\x00\x00\x00')
 
         # Too many values to pack.
         with self.assertRaises(ValueError) as cm:
@@ -214,9 +214,9 @@ class BitStructTest(unittest.TestCase):
         unpacked = unpack('u1u1s6u7u9', packed)
         self.assertEqual(unpacked, (0, 0, -2, 65, 22))
 
-        # packed = pack('f64', 1.0)
-        # unpacked = unpack('f64', packed)
-        # self.assertEqual(unpacked, (1.0, ))
+        packed = pack('f64', 1.0)
+        unpacked = unpack('f64', packed)
+        self.assertEqual(unpacked, (1.0, ))
 
         # if sys.version_info >= (3, 6):
         #     packed = pack('f16', 1.0)
