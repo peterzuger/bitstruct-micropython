@@ -26,47 +26,31 @@ install them from your package manager
 
 ### Installing
 [bitstruct-micropython](https://github.com/peterzuger/bitstruct-micropython) should work on
-any micropython port, to make the required changes, move to the directory of your required port.
+any [micropython](https://github.com/micropython/micropython) port.
 
-The first step of the installation is to move this project to the folder of your port.
-
-Then it is required to tell the micropython build system about the
-source files, to do this, append the following lines to
+First create a modules folder next to your copy of [micropython](https://github.com/micropython/micropython).
 
 ```
-mpconfigport.mk
+project/
+├── modules/
+│   └──bitstruct-micropython/
+│       ├──...
+│       └──micropython.mk
+└── micropython/
+    ├──ports/
+   ... ├──stm32/
+      ...
 ```
 
-```
-SRC_MOD += bitstruct-micropython/bitstruct/bitstream.c
-SRC_MOD += bitstruct-micropython/bitstruct/bitstruct.c
-```
-
-now the files get compiled, but the bitstruct module is not added to
-the micropython binary, to do this one more change is required.
-
-both changes are in:
+And now put this project in the modules folder.
 
 ```
-mpconfigport.h
+cd modules
+git clone https://gitlab.com/peterzuger/bitstruct-micropython.git
 ```
 
-first tell the compiler that you defined ```mp_module_bitstruct```, there
-are usualy a few more of these for other builtin modules, place this after these.
-```
-extern const struct _mp_obj_module_t mp_module_bitstruct;
-```
-
-then you need to add the bitstruct module to the ```MICROPY_PORT_BUILTIN_MODULES``` define
-to do this just append this line at the end of the ones that are already there.
-here it is important to not leave an empty line between the last one an this one,
-since that would end the macro prematurely.
-```
-{ MP_OBJ_NEW_QSTR(MP_QSTR_bitstruct), (mp_obj_t)&mp_module_bitstruct }, \
-```
-
-Now that all required changes are made, it is time to build micropython,
-for this cd to the top level directory.
+Now that all required changes are made, it is time to build [micropython](https://github.com/micropython/micropython),
+for this cd to the top level directory of [micropython](https://github.com/micropython/micropython).
 From here, first the mpy-cross compiler has to be built:
 ```
 make -C mpy-cross
@@ -74,7 +58,7 @@ make -C mpy-cross
 
 once this is built, compile your port with:
 ```
-make -C ports/your port name here/
+make -C ports/your port name here/ USER_C_MODULES=../modules CFLAGS_EXTRA=-DMODULE_BITSTRUCT_ENABLED=1
 ```
 
 and you are ready to use bitstruct.
