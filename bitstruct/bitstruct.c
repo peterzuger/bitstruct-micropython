@@ -1,5 +1,5 @@
 /**
- * @file   bitstruct.c
+ * @file   bitstruct-micropython/bitstruct/bitstruct.c
  * @author Erik Moqvist
  * @author Peter Züger
  * @date   16.10.2019
