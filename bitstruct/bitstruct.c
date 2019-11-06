@@ -579,7 +579,8 @@ static struct info_t* parse_format(mp_obj_t format_obj_p){
 static void pack_pack(struct info_t* info_p,
                       const mp_obj_t* args_p,
                       int consumed_args,
-                      struct bitstream_writer_t* writer_p){
+                      struct bitstream_writer_t* writer_p,
+                      bool fill_padding){
     for(int i = 0; i < info_p->number_of_fields; i++){
         struct field_info_t* field_p = &info_p->fields[i];
 
@@ -619,7 +620,7 @@ static mp_obj_t pack(struct info_t* info_p,
     uint8_t* data = pack_prepare(info_p, &writer);
 
     // raises NotImplementedError, OverflowError, TypeError
-    pack_pack(info_p, args_p, consumed_args, &writer);
+    pack_pack(info_p, args_p, consumed_args, &writer, true);
 
     // raises MemoryError
     mp_obj_t packed_p = mp_obj_new_bytes(data, (info_p->number_of_bits + 7) / 8);
@@ -745,7 +746,7 @@ static mp_obj_t pack_into(struct info_t* info_p,
     pack_into_prepare(info_p, buf_p, offset_p, &writer, &bounds);
 
     // raises NotImplementedError, OverflowError, TypeError
-    pack_pack(info_p, args_p, consumed_args, &writer);
+    pack_pack(info_p, args_p, consumed_args, &writer, fill_padding);
 
     return pack_into_finalize(&bounds);
 }
@@ -763,8 +764,8 @@ static mp_obj_t unpack_from(struct info_t* info_p,
 static void pack_dict_pack(struct info_t* info_p,
                            mp_obj_t names_p,
                            mp_obj_t data_p,
-                           struct bitstream_writer_t* writer_p){
-
+                           struct bitstream_writer_t* writer_p,
+                           bool fill_padding){
     size_t len;
     mp_obj_t* items;
     mp_obj_list_get(names_p, &len, &items);
@@ -805,7 +806,7 @@ static mp_obj_t pack_dict(struct info_t* info_p,
     uint8_t* data = pack_prepare(info_p, &writer);
 
     // raises KeyError, NotImplementedError, OverflowError, TypeError
-    pack_dict_pack(info_p, names_p, data_p, &writer);
+    pack_dict_pack(info_p, names_p, data_p, &writer, true);
 
     // raises MemoryError
     mp_obj_t packed_p = mp_obj_new_bytes(data, (info_p->number_of_bits + 7) / 8);
@@ -880,7 +881,7 @@ static mp_obj_t pack_into_dict(struct info_t* info_p,
     pack_into_prepare(info_p, buf_p, offset_p, &writer, &bounds);
 
     // raises KeyError, NotImplementedError, OverflowError, TypeError
-    pack_dict_pack(info_p, names_p, data_p, &writer);
+    pack_dict_pack(info_p, names_p, data_p, &writer, fill_padding);
 
     return pack_into_finalize(&bounds);
 }
