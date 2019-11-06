@@ -295,8 +295,14 @@ static void pack_raw(struct bitstream_writer_t* self_p,
     size_t size;
     char* buf_p;
 
-    // raises TypeError
-    buf_p = (char*)mp_obj_str_get_data(value_p, &size);
+
+    if(mp_obj_is_type(value_p, &mp_type_bytearray) || mp_obj_is_type(value_p, &mp_type_memoryview)){
+        buf_p = ((mp_obj_array_t*)value_p)->items;
+        size = ((mp_obj_array_t*)value_p)->len;
+    }else{
+        // raises TypeError
+        buf_p = (char*)mp_obj_str_get_data(value_p, &size);
+    }
 
     if(size < (field_info_p->number_of_bits / 8)){
         mp_raise_NotImplementedError("Short raw data.");
