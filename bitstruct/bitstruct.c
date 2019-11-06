@@ -580,7 +580,7 @@ static void pack_pack(struct info_t* info_p,
                       const mp_obj_t* args_p,
                       int consumed_args,
                       struct bitstream_writer_t* writer_p,
-                      bool fill_padding){
+                      mp_obj_t fill_padding){
     for(int i = 0; i < info_p->number_of_fields; i++){
         struct field_info_t* field_p = &info_p->fields[i];
 
@@ -620,7 +620,7 @@ static mp_obj_t pack(struct info_t* info_p,
     uint8_t* data = pack_prepare(info_p, &writer);
 
     // raises NotImplementedError, OverflowError, TypeError
-    pack_pack(info_p, args_p, consumed_args, &writer, true);
+    pack_pack(info_p, args_p, consumed_args, &writer, mp_const_true);
 
     // raises MemoryError
     mp_obj_t packed_p = mp_obj_new_bytes(data, (info_p->number_of_bits + 7) / 8);
@@ -734,7 +734,7 @@ static mp_obj_t pack_into(struct info_t* info_p,
                           const mp_obj_t* args_p,
                           size_t consumed_args,
                           size_t number_of_args,
-                          bool fill_padding){
+                          mp_obj_t fill_padding){
     struct bitstream_writer_t writer;
     struct bitstream_writer_bounds_t bounds;
 
@@ -765,7 +765,7 @@ static void pack_dict_pack(struct info_t* info_p,
                            mp_obj_t names_p,
                            mp_obj_t data_p,
                            struct bitstream_writer_t* writer_p,
-                           bool fill_padding){
+                           mp_obj_t fill_padding){
     size_t len;
     mp_obj_t* items;
     mp_obj_list_get(names_p, &len, &items);
@@ -806,7 +806,7 @@ static mp_obj_t pack_dict(struct info_t* info_p,
     uint8_t* data = pack_prepare(info_p, &writer);
 
     // raises KeyError, NotImplementedError, OverflowError, TypeError
-    pack_dict_pack(info_p, names_p, data_p, &writer, true);
+    pack_dict_pack(info_p, names_p, data_p, &writer, mp_const_true);
 
     // raises MemoryError
     mp_obj_t packed_p = mp_obj_new_bytes(data, (info_p->number_of_bits + 7) / 8);
@@ -873,7 +873,7 @@ static mp_obj_t pack_into_dict(struct info_t* info_p,
                                mp_obj_t buf_p,
                                mp_obj_t offset_p,
                                mp_obj_t data_p,
-                               bool fill_padding){
+                               mp_obj_t fill_padding){
     struct bitstream_writer_t writer;
     struct bitstream_writer_bounds_t bounds;
 
@@ -891,7 +891,7 @@ static mp_obj_t calcsize(struct info_t* info_p){
     return mp_obj_new_int_from_ll(info_p->number_of_bits);
 }
 
-static bool fill_pading_from_kwarg(mp_map_t* kw_args){
+static mp_obj_t fill_pading_from_kwarg(mp_map_t* kw_args){
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_fill_padding, MP_ARG_KW_ONLY | MP_ARG_BOOL, {.u_bool = true} },
     };
@@ -902,7 +902,7 @@ static bool fill_pading_from_kwarg(mp_map_t* kw_args){
     }args;
     mp_arg_parse_all(0, NULL, kw_args,
                      MP_ARRAY_SIZE(allowed_args), allowed_args, (mp_arg_val_t*)&args);
-    return args.fill_padding.u_bool;
+    return mp_obj_new_bool(args.fill_padding.u_bool);
 }
 
 
@@ -1093,7 +1093,7 @@ STATIC mp_obj_t bitstruct_CompiledFormat_unpack(mp_obj_t self_in, mp_obj_t data)
 STATIC mp_obj_t bitstruct_CompiledFormat_pack_into(size_t n_args, const mp_obj_t* args, mp_map_t* kw_args){
     bitstruct_CompiledFormat_obj_t* self = MP_OBJ_TO_PTR(args[0]);
 
-    bool fill_padding = fill_pading_from_kwarg(kw_args);
+    mp_obj_t fill_padding = fill_pading_from_kwarg(kw_args);
 
     // raises NotImplementedError, OverflowError, TypeError, ValueError
     return pack_into(self->info_p, args[2], args[2], args, 3, n_args, fill_padding);
@@ -1222,7 +1222,7 @@ STATIC mp_obj_t bitstruct_CompiledFormatDict_unpack(mp_obj_t self_in, mp_obj_t d
 STATIC mp_obj_t bitstruct_CompiledFormatDict_pack_into(size_t n_args, const mp_obj_t* pos_args, mp_map_t* kw_args){
     bitstruct_CompiledFormatDict_obj_t* self = MP_OBJ_TO_PTR(pos_args[0]);
 
-    bool fill_padding = fill_pading_from_kwarg(kw_args);
+    mp_obj_t fill_padding = fill_pading_from_kwarg(kw_args);
 
     // raises KeyError, NotImplementedError, OverflowError, TypeError
     return pack_into_dict(self->info_p, self->names_p, pos_args[1], 0, pos_args[2], fill_padding);
@@ -1296,7 +1296,7 @@ STATIC mp_obj_t bitstruct_unpack(mp_obj_t format, mp_obj_t data){
  * @param kwargs: fill_padding = true
  */
 STATIC mp_obj_t bitstruct_pack_into(size_t n_args, const mp_obj_t* args, mp_map_t* kw_args){
-    bool fill_padding = fill_pading_from_kwarg(kw_args);
+    mp_obj_t fill_padding = fill_pading_from_kwarg(kw_args);
 
     // raises MemoryError, NotImplementedError, TypeError, ValueError
     struct info_t* info_p = parse_format(args[0]);
@@ -1386,7 +1386,7 @@ STATIC mp_obj_t bitstruct_unpack_dict(mp_obj_t format, mp_obj_t names, mp_obj_t 
  * @param kwargs: fill_padding = true
  */
 STATIC mp_obj_t bitstruct_pack_into_dict(size_t n_args, const mp_obj_t* pos_args, mp_map_t* kw_args){
-    bool fill_padding = fill_pading_from_kwarg(kw_args);
+    mp_obj_t fill_padding = fill_pading_from_kwarg(kw_args);
 
     // raises MemoryError, NotImplementedError, TypeError, ValueError
     struct info_t* info_p = parse_format(pos_args[0]);
