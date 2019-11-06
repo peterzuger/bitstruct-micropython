@@ -52,17 +52,25 @@ typedef void (*pack_field_t)(struct bitstream_writer_t* self_p,
 typedef mp_obj_t (*unpack_field_t)(struct bitstream_reader_t* self_p,
                                    struct field_info_t* field_info_p);
 
+#define BITORDER_LSBFIRST true
+#define BITORDER_MSBFIRST false
+
 struct field_info_t{
     pack_field_t pack;
     unpack_field_t unpack;
     int number_of_bits;
     bool is_padding;
+    bool bitorder;
 };
+
+#define BYTEORDER_LSBFIRST true
+#define BYTEORDER_MSBFIRST false
 
 struct info_t{
     int number_of_bits;
     int number_of_fields;
     int number_of_non_padding_fields;
+    bool byteorder;
     struct field_info_t fields[1];
 };
 
@@ -424,7 +432,8 @@ static void field_info_init_one_padding(struct field_info_t* self_p){
 
 static void field_info_init(struct field_info_t* self_p,
                             int kind,
-                            int number_of_bits){
+                            int number_of_bits,
+                            bool bitorder){
     bool is_padding;
 
     is_padding = false;
@@ -479,6 +488,7 @@ static void field_info_init(struct field_info_t* self_p,
 
     self_p->number_of_bits = number_of_bits;
     self_p->is_padding = is_padding;
+    self_p->bitorder = bitorder;
 }
 
 static int count_number_of_fields(const char* format_p,
@@ -507,9 +517,23 @@ static inline int isspace(int c){return (((c>='\t')&&(c<='\r')) || (c==' '));}
 static inline int isdigit(int c){return ((c>='0')&&(c<='9'));}
 const char* parse_field(const char* format_p,
                         int* kind_p,
-                        int* number_of_bits_p){
+                        int* number_of_bits_p,
+                        bool* bitorder){
     while(isspace(*format_p)){
         format_p++;
+    }
+
+    switch(*format_p){
+    case '<':
+        *bitorder = BITORDER_LSBFIRST;
+        format_p++;
+        break;
+    case '>':
+        *bitorder = BITORDER_MSBFIRST;
+        format_p++;
+        break;
+    default:
+        break;
     }
 
     *kind_p = *format_p;
@@ -541,6 +565,7 @@ static struct info_t* parse_format(mp_obj_t format_obj_p){
     int kind;
     int number_of_bits;
     int number_of_padding_fields;
+    bool bitorder;
 
     // raises TypeError
     format_p = mp_obj_str_get_str(format_obj_p);
@@ -558,12 +583,23 @@ static struct info_t* parse_format(mp_obj_t format_obj_p){
 
     for(i = 0; i < info_p->number_of_fields; i++){
         // raises ValueError
-        format_p = parse_field(format_p, &kind, &number_of_bits);
+        format_p = parse_field(format_p, &kind, &number_of_bits, &bitorder);
 
         // raises NotImplementedError, ValueError
-        field_info_init(&info_p->fields[i], kind, number_of_bits);
+        field_info_init(&info_p->fields[i], kind, number_of_bits, bitorder);
 
         info_p->number_of_bits += number_of_bits;
+    }
+
+    switch(*format_p){
+    case '<':
+        info_p->byteorder = BYTEORDER_LSBFIRST;
+        break;
+    case '>':
+        info_p->byteorder = BYTEORDER_MSBFIRST;
+        break;
+    default:
+        break;
     }
 
     // raises MemoryError
