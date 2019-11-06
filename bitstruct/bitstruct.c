@@ -77,25 +77,24 @@ static void is_names_list(mp_obj_t names_p){
 static void pack_signed_integer(struct bitstream_writer_t* self_p,
                                 mp_obj_t value_p,
                                 struct field_info_t* field_info_p){
-    int64_t value;
+    mp_int_t value;
 
     // raises TypeError
     value = mp_obj_get_int(value_p);
 
     if(field_info_p->number_of_bits < 64){
-
         value &= ((1ull << field_info_p->number_of_bits) - 1);
     }
 
     bitstream_writer_write_u64_bits(self_p,
-                                    (uint64_t)value,
+                                    (mp_int_t)value,
                                     field_info_p->number_of_bits);
 }
 
 static mp_obj_t unpack_signed_integer(struct bitstream_reader_t* self_p,
                                       struct field_info_t* field_info_p){
-    uint64_t value;
-    uint64_t sign_bit;
+    mp_int_t value;
+    mp_int_t sign_bit;
 
     value = bitstream_reader_read_u64_bits(self_p, field_info_p->number_of_bits);
     sign_bit = (1ull << (field_info_p->number_of_bits - 1));
@@ -111,7 +110,7 @@ static mp_obj_t unpack_signed_integer(struct bitstream_reader_t* self_p,
 static void pack_unsigned_integer(struct bitstream_writer_t* self_p,
                                   mp_obj_t value_p,
                                   struct field_info_t* field_info_p){
-    uint64_t value;
+    mp_int_t value;
 
     // raises TypeError
     value = mp_obj_get_int(value_p);
@@ -123,7 +122,7 @@ static void pack_unsigned_integer(struct bitstream_writer_t* self_p,
 
 static mp_obj_t unpack_unsigned_integer(struct bitstream_reader_t* self_p,
                                         struct field_info_t* field_info_p){
-    uint64_t value;
+    mp_int_t value;
 
     value = bitstream_reader_read_u64_bits(self_p,
                                            field_info_p->number_of_bits);
