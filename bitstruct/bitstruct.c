@@ -295,17 +295,25 @@ static mp_obj_t unpack_raw(struct bitstream_reader_t* self_p,
 static void pack_zero_padding(struct bitstream_writer_t* self_p,
                               mp_obj_t value_p,
                               struct field_info_t* field_info_p){
-    bitstream_writer_write_repeated_bit(self_p,
-                                        0,
-                                        field_info_p->number_of_bits);
+    if(mp_obj_is_true(value_p)){
+        bitstream_writer_write_repeated_bit(self_p,
+                                            0,
+                                            field_info_p->number_of_bits);
+    }else{
+        bitstream_writer_seek(self_p, field_info_p->number_of_bits);
+    }
 }
 
 static void pack_one_padding(struct bitstream_writer_t* self_p,
                              mp_obj_t value_p,
                              struct field_info_t* field_info_p){
-    bitstream_writer_write_repeated_bit(self_p,
-                                        1,
-                                        field_info_p->number_of_bits);
+    if(mp_obj_is_true(value_p)){
+        bitstream_writer_write_repeated_bit(self_p,
+                                            1,
+                                            field_info_p->number_of_bits);
+    }else{
+        bitstream_writer_seek(self_p, field_info_p->number_of_bits);
+    }
 }
 
 static mp_obj_t unpack_padding(struct bitstream_reader_t* self_p,
@@ -586,7 +594,7 @@ static void pack_pack(struct info_t* info_p,
 
         mp_obj_t value_p;
         if(field_p->is_padding){
-            value_p = mp_const_none;
+            value_p = fill_padding;
         }else{
             value_p = args_p[consumed_args];
             consumed_args++;
@@ -776,7 +784,7 @@ static void pack_dict_pack(struct info_t* info_p,
 
         mp_obj_t value_p;
         if(field_p->is_padding){
-            value_p = mp_const_none;
+            value_p = fill_padding;
         }else{
             // raises KeyError
             value_p = mp_obj_dict_get(data_p, items[consumed_args]);
