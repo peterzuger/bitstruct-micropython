@@ -667,7 +667,7 @@ static mp_obj_t unpack(struct info_t* info_p, mp_obj_t data_p, long offset){
     int produced_args;
     size_t size = 0;
 
-    if(mp_obj_is_type(data_p, &mp_type_bytearray)){
+    if(mp_obj_is_type(data_p, &mp_type_bytearray) || mp_obj_is_type(data_p, &mp_type_memoryview)){
         packed_p = ((mp_obj_array_t*)data_p)->items;
         size = ((mp_obj_array_t*)data_p)->len;
     }else if(mp_obj_is_type(data_p, &mp_type_list)){
