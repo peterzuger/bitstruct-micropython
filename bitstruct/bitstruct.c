@@ -57,15 +57,6 @@ struct field_info_t{
     unpack_field_t unpack;
     int number_of_bits;
     bool is_padding;
-    union{
-        struct{
-            int64_t lower;
-            int64_t upper;
-        }s;
-        struct{
-            uint64_t upper;
-        }u;
-    }limits;
 };
 
 struct info_t{
@@ -87,19 +78,11 @@ static void pack_signed_integer(struct bitstream_writer_t* self_p,
                                 mp_obj_t value_p,
                                 struct field_info_t* field_info_p){
     int64_t value;
-    int64_t lower;
-    int64_t upper;
 
     // raises TypeError
     value = mp_obj_get_int(value_p);
 
     if(field_info_p->number_of_bits < 64){
-        lower = field_info_p->limits.s.lower;
-        upper = field_info_p->limits.s.upper;
-
-        if((value < lower) || (value > upper)){
-            mp_raise_msg(&mp_type_OverflowError, "Signed integer out of range.");
-        }
 
         value &= ((1ull << field_info_p->number_of_bits) - 1);
     }
@@ -132,10 +115,6 @@ static void pack_unsigned_integer(struct bitstream_writer_t* self_p,
 
     // raises TypeError
     value = mp_obj_get_int(value_p);
-
-    if(value > field_info_p->limits.u.upper){
-        mp_raise_msg(&mp_type_OverflowError, "Unsigned integer out of range.");
-    }
 
     bitstream_writer_write_u64_bits(self_p,
                                     value,
@@ -356,8 +335,6 @@ static mp_obj_t unpack_padding(struct bitstream_reader_t* self_p,
 
 static void field_info_init_signed(struct field_info_t* self_p,
                                    int number_of_bits){
-    uint64_t limit;
-
     self_p->pack = pack_signed_integer;
     self_p->unpack = unpack_signed_integer;
 
@@ -365,9 +342,6 @@ static void field_info_init_signed(struct field_info_t* self_p,
         mp_raise_NotImplementedError("Signed integer over 64 bits.");
     }
 
-    limit = (1ull << (number_of_bits - 1));
-    self_p->limits.s.lower = -limit;
-    self_p->limits.s.upper = (limit - 1);
 }
 
 static void field_info_init_unsigned(struct field_info_t* self_p,
@@ -377,12 +351,6 @@ static void field_info_init_unsigned(struct field_info_t* self_p,
 
     if(number_of_bits > 64){
         mp_raise_NotImplementedError("Unsigned integer over 64 bits.");
-    }
-
-    if(number_of_bits < 64){
-        self_p->limits.u.upper = ((1ull << number_of_bits) - 1);
-    }else{
-        self_p->limits.u.upper = (uint64_t)-1;
     }
 }
 
