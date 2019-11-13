@@ -86,11 +86,9 @@ static void is_names_list(mp_obj_t names_p){
 static void pack_signed_integer(struct bitstream_writer_t* self_p,
                                 mp_obj_t value_p,
                                 struct field_info_t* field_info_p){
-    int64_t value;
-
-    if(mp_obj_is_small_int(value_p) || mp_obj_get_int_maybe(value_p, (mp_int_t*)&value)){
+    if(mp_obj_is_small_int(value_p)){
         // raises TypeError
-        value = mp_obj_get_int(value_p);
+        int64_t value = mp_obj_get_int(value_p);
 
         uint64_t limit = (1ull << (field_info_p->number_of_bits - 1));
         int64_t lower = -limit;
@@ -106,8 +104,10 @@ static void pack_signed_integer(struct bitstream_writer_t* self_p,
         bitstream_writer_write_u64_bits(self_p,
                                         (uint64_t)value,
                                         field_info_p->number_of_bits);
-    }else{
+    }else if(mp_obj_is_type(value_p, &mp_type_int)){
         // TODO
+    }else{
+        mp_raise_TypeError("expected int");
     }
 }
 
@@ -127,11 +127,9 @@ static mp_obj_t unpack_signed_integer(struct bitstream_reader_t* self_p,
 static void pack_unsigned_integer(struct bitstream_writer_t* self_p,
                                   mp_obj_t value_p,
                                   struct field_info_t* field_info_p){
-    uint64_t value;
-
-    if(mp_obj_is_small_int(value_p) || mp_obj_get_int_maybe(value_p, (mp_int_t*)&value)){
+    if(mp_obj_is_small_int(value_p)){
         // raises TypeError
-        value = mp_obj_get_int(value_p);
+        uint64_t value = mp_obj_get_int(value_p);
 
         uint64_t upper;
         if(field_info_p->number_of_bits < 64)
@@ -145,8 +143,17 @@ static void pack_unsigned_integer(struct bitstream_writer_t* self_p,
         bitstream_writer_write_u64_bits(self_p,
                                         value,
                                         field_info_p->number_of_bits);
+    }else if(mp_obj_is_type(value_p, &mp_type_int)){
+        size_t size = (field_info_p->number_of_bits + 7) / 8;
+        uint8_t* buffer = alloca(size);
+        mp_obj_int_to_bytes_impl(value_p, field_info_p->bitorder, size, buffer);
+
+        bitstream_writer_write_bytes(self_p, buffer, field_info_p->number_of_bits / 8);
+
+        if(field_info_p->number_of_bits % 8)
+            bitstream_writer_write_u64_bits(self_p, buffer[size - 1], field_info_p->number_of_bits % 8);
     }else{
-        // TODO
+        mp_raise_TypeError("expected int");
     }
 }
 
