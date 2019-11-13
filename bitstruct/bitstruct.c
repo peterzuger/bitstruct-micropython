@@ -356,21 +356,12 @@ static void field_info_init_signed(struct field_info_t* self_p,
                                    int number_of_bits){
     self_p->pack = pack_signed_integer;
     self_p->unpack = unpack_signed_integer;
-
-    if(number_of_bits > 64){
-        mp_raise_NotImplementedError("Signed integer over 64 bits.");
-    }
-
 }
 
 static void field_info_init_unsigned(struct field_info_t* self_p,
                                      int number_of_bits){
     self_p->pack = pack_unsigned_integer;
     self_p->unpack = unpack_unsigned_integer;
-
-    if(number_of_bits > 64){
-        mp_raise_NotImplementedError("Unsigned integer over 64 bits.");
-    }
 }
 
 static void field_info_init_float(struct field_info_t* self_p,
