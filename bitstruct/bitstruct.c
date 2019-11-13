@@ -89,16 +89,16 @@ static void pack_signed_integer(struct bitstream_writer_t* self_p,
     // raises TypeError
     mp_int_t value = mp_obj_get_int(value_p);
 
-    if(field_info_p->number_of_bits < 64){
-        value &= ((1ull << field_info_p->number_of_bits) - 1);
-    }
-
-    int64_t limit = (1ull << (field_info_p->number_of_bits - 1));
+    uint64_t limit = (1ull << (field_info_p->number_of_bits - 1));
     int64_t lower = -limit;
     int64_t upper = (limit - 1);
 
     if((value < lower) || (value > upper))
         mp_raise_msg(&mp_type_OverflowError, "Signed integer out of range.");
+
+    if(field_info_p->number_of_bits < 64){
+        value &= ((1ull << field_info_p->number_of_bits) - 1);
+    }
 
     bitstream_writer_write_u64_bits(self_p,
                                     (mp_int_t)value,
