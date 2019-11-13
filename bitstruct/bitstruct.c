@@ -36,6 +36,7 @@
 #include "py/objstr.h"
 #include "py/objarray.h"
 #include "py/gc.h"
+#include "py/objint.h"
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -92,6 +93,13 @@ static void pack_signed_integer(struct bitstream_writer_t* self_p,
         value &= ((1ull << field_info_p->number_of_bits) - 1);
     }
 
+    int64_t limit = (1ull << (field_info_p->number_of_bits - 1));
+    int64_t lower = -limit;
+    int64_t upper = (limit - 1);
+
+    if((value < lower) || (value > upper))
+        mp_raise_msg(&mp_type_OverflowError, "Signed integer out of range.");
+
     bitstream_writer_write_u64_bits(self_p,
                                     (mp_int_t)value,
                                     field_info_p->number_of_bits);
@@ -115,6 +123,15 @@ static void pack_unsigned_integer(struct bitstream_writer_t* self_p,
                                   struct field_info_t* field_info_p){
     // raises TypeError
     mp_int_t value = mp_obj_get_int(value_p);
+
+    uint64_t upper;
+    if(field_info_p->number_of_bits < 64)
+        upper = ((1ull << field_info_p->number_of_bits) - 1);
+    else
+        upper = (uint64_t)-1;
+
+    if(value > upper)
+        mp_raise_msg(&mp_type_OverflowError, "Unsigned integer out of range.");
 
     bitstream_writer_write_u64_bits(self_p,
                                     value,
