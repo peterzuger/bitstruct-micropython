@@ -87,7 +87,7 @@ static void pack_signed_integer(struct bitstream_writer_t* self_p,
                                 mp_obj_t value_p,
                                 struct field_info_t* field_info_p){
     // raises TypeError
-    mp_int_t value = mp_obj_get_int(value_p);
+    int64_t value = mp_obj_get_int(value_p);
 
     uint64_t limit = (1ull << (field_info_p->number_of_bits - 1));
     int64_t lower = -limit;
@@ -101,14 +101,14 @@ static void pack_signed_integer(struct bitstream_writer_t* self_p,
     }
 
     bitstream_writer_write_u64_bits(self_p,
-                                    (mp_int_t)value,
+                                    (uint64_t)value,
                                     field_info_p->number_of_bits);
 }
 
 static mp_obj_t unpack_signed_integer(struct bitstream_reader_t* self_p,
                                       struct field_info_t* field_info_p){
-    mp_int_t value = bitstream_reader_read_u64_bits(self_p, field_info_p->number_of_bits);
-    mp_int_t sign_bit = (1ull << (field_info_p->number_of_bits - 1));
+    uint64_t value = bitstream_reader_read_u64_bits(self_p, field_info_p->number_of_bits);
+    uint64_t sign_bit = (1ull << (field_info_p->number_of_bits - 1));
 
     if(value & sign_bit){
         value |= ~(((sign_bit) << 1) - 1);
@@ -122,7 +122,7 @@ static void pack_unsigned_integer(struct bitstream_writer_t* self_p,
                                   mp_obj_t value_p,
                                   struct field_info_t* field_info_p){
     // raises TypeError
-    mp_int_t value = mp_obj_get_int(value_p);
+    uint64_t value = mp_obj_get_int(value_p);
 
     uint64_t upper;
     if(field_info_p->number_of_bits < 64)
@@ -140,7 +140,7 @@ static void pack_unsigned_integer(struct bitstream_writer_t* self_p,
 
 static mp_obj_t unpack_unsigned_integer(struct bitstream_reader_t* self_p,
                                         struct field_info_t* field_info_p){
-    mp_int_t value = bitstream_reader_read_u64_bits(self_p,
+    uint64_t value = bitstream_reader_read_u64_bits(self_p,
                                                     field_info_p->number_of_bits);
 
     // raises OverflowError, MemoryError
