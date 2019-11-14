@@ -93,29 +93,28 @@ static inline uint8_t reverse(uint8_t b) {
 static void pack_signed_integer(struct bitstream_writer_t* self_p,
                                 mp_obj_t value_p,
                                 struct field_info_t* field_info_p){
-    if(mp_obj_is_small_int(value_p)){
-        // raises TypeError
-        int64_t value = mp_obj_get_int(value_p);
-
-        uint64_t limit = (1ull << (field_info_p->number_of_bits - 1));
-        int64_t lower = -limit;
-        int64_t upper = (limit - 1);
-
-        if((value < lower) || (value > upper))
-            mp_raise_msg(&mp_type_OverflowError, "Signed integer out of range.");
-
-        if(field_info_p->number_of_bits < 64){
-            value &= ((1ull << field_info_p->number_of_bits) - 1);
-        }
-
-        bitstream_writer_write_u64_bits(self_p,
-                                        (uint64_t)value,
-                                        field_info_p->number_of_bits);
-    }else if(mp_obj_is_type(value_p, &mp_type_int)){
+    if(mp_obj_is_type(value_p, &mp_type_int)){
         // TODO
-    }else{
-        mp_raise_TypeError("expected int");
+        return;
     }
+
+    // raises TypeError
+    int64_t value = mp_obj_get_int(value_p);
+
+    uint64_t limit = (1ull << (field_info_p->number_of_bits - 1));
+    int64_t lower = -limit;
+    int64_t upper = (limit - 1);
+
+    if((value < lower) || (value > upper))
+        mp_raise_msg(&mp_type_OverflowError, "Signed integer out of range.");
+
+    if(field_info_p->number_of_bits < 64){
+        value &= ((1ull << field_info_p->number_of_bits) - 1);
+    }
+
+    bitstream_writer_write_u64_bits(self_p,
+                                    (uint64_t)value,
+                                    field_info_p->number_of_bits);
 }
 
 static mp_obj_t unpack_signed_integer(struct bitstream_reader_t* self_p,
@@ -134,23 +133,7 @@ static mp_obj_t unpack_signed_integer(struct bitstream_reader_t* self_p,
 static void pack_unsigned_integer(struct bitstream_writer_t* self_p,
                                   mp_obj_t value_p,
                                   struct field_info_t* field_info_p){
-    if(mp_obj_is_small_int(value_p)){
-        // raises TypeError
-        uint64_t value = mp_obj_get_int(value_p);
-
-        uint64_t upper;
-        if(field_info_p->number_of_bits < 64)
-            upper = ((1ull << field_info_p->number_of_bits) - 1);
-        else
-            upper = (uint64_t)-1;
-
-        if(value > upper)
-            mp_raise_msg(&mp_type_OverflowError, "Unsigned integer out of range.");
-
-        bitstream_writer_write_u64_bits(self_p,
-                                        value,
-                                        field_info_p->number_of_bits);
-    }else if(mp_obj_is_type(value_p, &mp_type_int)){
+    if(mp_obj_is_type(value_p, &mp_type_int)){
         size_t size = (field_info_p->number_of_bits + 7) / 8;
         uint8_t* buffer = alloca(size);
         mp_obj_int_to_bytes_impl(value_p, field_info_p->bitorder, size, buffer);
@@ -167,11 +150,24 @@ static void pack_unsigned_integer(struct bitstream_writer_t* self_p,
             }
             bitstream_writer_write_bytes(self_p, buffer, field_info_p->number_of_bits / 8);
         }
-
-
-    }else{
-        mp_raise_TypeError("expected int");
+        return;
     }
+
+    // raises TypeError
+    uint64_t value = mp_obj_get_int(value_p);
+
+    uint64_t upper;
+    if(field_info_p->number_of_bits < 64)
+        upper = ((1ull << field_info_p->number_of_bits) - 1);
+    else
+        upper = (uint64_t)-1;
+
+    if(value > upper)
+        mp_raise_msg(&mp_type_OverflowError, "Unsigned integer out of range.");
+
+    bitstream_writer_write_u64_bits(self_p,
+                                    value,
+                                    field_info_p->number_of_bits);
 }
 
 static mp_obj_t unpack_unsigned_integer(struct bitstream_reader_t* self_p,
