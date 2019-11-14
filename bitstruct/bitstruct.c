@@ -108,6 +108,10 @@ static void pack_signed_integer(struct bitstream_writer_t* self_p,
     if((value < lower) || (value > upper))
         mp_raise_msg(&mp_type_OverflowError, "Signed integer out of range.");
 
+    if(field_info_p->number_of_bits < 64){
+        value &= ((1ull << field_info_p->number_of_bits) - 1);
+    }
+
     bitstream_writer_write_u64_bits(self_p,
                                     (uint64_t)value,
                                     field_info_p->number_of_bits);
