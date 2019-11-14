@@ -83,6 +83,13 @@ static void is_names_list(mp_obj_t names_p){
         mp_raise_TypeError("Names is not a list.");
 }
 
+static inline uint8_t reverse(uint8_t b) {
+    b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
+    b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
+    b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
+    return b;
+}
+
 static void pack_signed_integer(struct bitstream_writer_t* self_p,
                                 mp_obj_t value_p,
                                 struct field_info_t* field_info_p){
@@ -148,10 +155,20 @@ static void pack_unsigned_integer(struct bitstream_writer_t* self_p,
         uint8_t* buffer = alloca(size);
         mp_obj_int_to_bytes_impl(value_p, field_info_p->bitorder, size, buffer);
 
-        bitstream_writer_write_bytes(self_p, buffer, field_info_p->number_of_bits / 8);
+        if(!field_info_p->bitorder){
+            for(size_t i = 0; i < (field_info_p->number_of_bits / 8); ++i)
+                bitstream_writer_write_u8(self_p, reverse(buffer[i]));
+            for(size_t i = 0; i < (field_info_p->number_of_bits % 8); ++i)
+                bitstream_writer_write_bit(self_p, buffer[size - 1] >> i);
+        }else{
+            if(field_info_p->number_of_bits % 8){
+                bitstream_writer_write_u64_bits(self_p, buffer[0], field_info_p->number_of_bits % 8);
+                buffer++;
+            }
+            bitstream_writer_write_bytes(self_p, buffer, field_info_p->number_of_bits / 8);
+        }
 
-        if(field_info_p->number_of_bits % 8)
-            bitstream_writer_write_u64_bits(self_p, buffer[size - 1], field_info_p->number_of_bits % 8);
+
     }else{
         mp_raise_TypeError("expected int");
     }
