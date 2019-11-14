@@ -16,13 +16,13 @@ class BitStructTest(unittest.TestCase):
         packed = pack('u1', 1)
         self.assertEqual(packed, b'\x80')
 
-        # packed = pack('u77', 0x100000000001000000)
-        # ref = b'\x00\x80\x00\x00\x00\x00\x08\x00\x00\x00'
-        # self.assertEqual(packed, ref)
+        packed = pack('u77', 0x100000000001000000)
+        ref = b'\x00\x80\x00\x00\x00\x00\x08\x00\x00\x00'
+        self.assertEqual(packed, ref)
 
-        # packed = pack('u8000', int(8000 * '1', 2))
-        # ref = 1000 * b'\xff'
-        # self.assertEqual(packed, ref)
+        packed = pack('u8000', int(8000 * '1', 2))
+        ref = 1000 * b'\xff'
+        self.assertEqual(packed, ref)
 
         # packed = pack('s4000', int(8000 * '0', 2))
         # ref = 500 * b'\x00'
