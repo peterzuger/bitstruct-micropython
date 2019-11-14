@@ -53,8 +53,8 @@ typedef void (*pack_field_t)(struct bitstream_writer_t* self_p,
 typedef mp_obj_t (*unpack_field_t)(struct bitstream_reader_t* self_p,
                                    struct field_info_t* field_info_p);
 
-#define BITORDER_LSBFIRST true
-#define BITORDER_MSBFIRST false
+#define BITORDER_LSBFIRST (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+#define BITORDER_MSBFIRST (!BITORDER_LSBFIRST)
 
 struct field_info_t{
     pack_field_t pack;
@@ -64,8 +64,8 @@ struct field_info_t{
     bool bitorder;
 };
 
-#define BYTEORDER_LSBFIRST true
-#define BYTEORDER_MSBFIRST false
+#define BYTEORDER_LSBFIRST BITORDER_LSBFIRST
+#define BYTEORDER_MSBFIRST BITORDER_MSBFIRST
 
 struct info_t{
     int number_of_bits;
