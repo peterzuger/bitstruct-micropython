@@ -261,17 +261,18 @@ static mp_obj_t unpack_float_64(struct bitstream_reader_t* self_p,
 static void pack_bool(struct bitstream_writer_t* self_p,
                       mp_obj_t value_p,
                       struct field_info_t* field_info_p){
-    bitstream_writer_write_u64_bits(self_p,
-                                    mp_obj_is_true(value_p),
-                                    field_info_p->number_of_bits);
+    bitstream_writer_write_repeated_bit(self_p,
+                                        mp_obj_is_true(value_p),
+                                        field_info_p->number_of_bits);
 }
 
 static mp_obj_t unpack_bool(struct bitstream_reader_t* self_p,
                             struct field_info_t* field_info_p){
-    return ((long)bitstream_reader_read_u64_bits(
-                self_p,
-                field_info_p->number_of_bits))
-        ? mp_const_true : mp_const_false;
+    bool val = false;
+    for(size_t i = 0; i < field_info_p->number_of_bits; ++i){
+        val |= bitstream_reader_read_bit(self_p);
+    }
+    return val ? mp_const_true : mp_const_false;
 }
 
 static void pack_text(struct bitstream_writer_t* self_p,
@@ -417,10 +418,6 @@ static void field_info_init_bool(struct field_info_t* self_p,
                                  int number_of_bits){
     self_p->pack = pack_bool;
     self_p->unpack = unpack_bool;
-
-    if(number_of_bits > 64){
-        mp_raise_NotImplementedError("Bool over 64 bits.");
-    }
 }
 
 static void field_info_init_text(struct field_info_t* self_p,
