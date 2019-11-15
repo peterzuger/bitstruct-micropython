@@ -40,8 +40,8 @@ class BitStructTest(unittest.TestCase):
         packed = pack('P1u1s6p7u9', 0, -2, 22)
         self.assertEqual(packed, b'\xbe\x00\x16')
 
-        # packed = pack('u1s6f32r43', 0, -2, 3.75, b'\x00\xff\x00\xff\x00\xff')
-        # self.assertEqual(packed, b'\x7c\x80\xe0\x00\x00\x01\xfe\x01\xfe\x01\xc0')
+        packed = pack('u1s6f32r43', 0, -2, 3.75, b'\x00\xff\x00\xff\x00\xff')
+        self.assertEqual(packed, b'\x7c\x80\xe0\x00\x00\x01\xfe\x01\xfe\x01\xc0')
 
         packed = pack('b1', True)
         self.assertEqual(packed, b'\x80')
@@ -93,10 +93,10 @@ class BitStructTest(unittest.TestCase):
         self.assertEqual(str(cm.exception), "can't convert str to float")
 
         # Cannot convert argument to bytearray.
-        with self.assertRaises(NotImplementedError) as cm:
+        with self.assertRaises(TypeError) as cm:
             pack('r5', 1.0)
 
-        self.assertEqual(str(cm.exception), "Raw not multiple of 8 bits.")
+        self.assertEqual(str(cm.exception), "can't convert 'float' object to str implicitly")
 
         # Cannot encode argument as utf-8.
         with self.assertRaises(TypeError) as cm:
@@ -147,9 +147,9 @@ class BitStructTest(unittest.TestCase):
         unpacked = unpack('p1u1s6p7u9', packed)
         self.assertEqual(unpacked, (0, -2, 22))
 
-        # packed = b'\x7c\x80\xe0\x00\x00\x01\xfe\x01\xfe\x01\xc0'
-        # unpacked = unpack('u1s6f32r43', packed)
-        # self.assertEqual(unpacked, (0, -2, 3.75, b'\x00\xff\x00\xff\x00\xe0'))
+        packed = b'\x7c\x80\xe0\x00\x00\x01\xfe\x01\xfe\x01\xc0'
+        unpacked = unpack('u1s6f32r43', packed)
+        self.assertEqual(unpacked, (0, -2, 3.75, b'\x00\xff\x00\xff\x00\xe0'))
 
         packed = bytearray(b'\x80')
         unpacked = unpack('b1', packed)

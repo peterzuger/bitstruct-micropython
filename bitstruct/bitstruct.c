@@ -319,27 +319,36 @@ static void pack_raw(struct bitstream_writer_t* self_p,
         buf_p = (char*)mp_obj_str_get_data(value_p, &size);
     }
 
-    if(size < (field_info_p->number_of_bits / 8)){
+    if(size < (field_info_p->number_of_bits / 8))
         mp_raise_NotImplementedError("Short raw data.");
-    }else{
-        bitstream_writer_write_bytes(self_p,
-                                     (uint8_t*)buf_p,
-                                     field_info_p->number_of_bits / 8);
+
+    bitstream_writer_write_bytes(self_p,
+                                 (uint8_t*)buf_p,
+                                 field_info_p->number_of_bits / 8);
+
+    if(field_info_p->number_of_bits % 8){
+        uint8_t tmp = buf_p[field_info_p->number_of_bits / 8];
+        bitstream_writer_write_u64_bits(self_p,
+                                        tmp >> (8 - (field_info_p->number_of_bits % 8)),
+                                        field_info_p->number_of_bits % 8);
     }
 }
 
 static mp_obj_t unpack_raw(struct bitstream_reader_t* self_p,
                            struct field_info_t* field_info_p){
-    int number_of_bytes = (field_info_p->number_of_bits / 8);
+    int size = (field_info_p->number_of_bits + 7) / 8;
 
-    uint8_t* buf_p = alloca(number_of_bytes);
+    uint8_t* buf_p = alloca(size);
 
-    bitstream_reader_read_bytes(self_p, buf_p, number_of_bytes);
+    bitstream_reader_read_bytes(self_p, buf_p, field_info_p->number_of_bits / 8);
+
+    if(field_info_p->number_of_bits % 8){
+        uint8_t tmp = bitstream_reader_read_u64_bits(self_p, field_info_p->number_of_bits % 8);
+        buf_p[size - 1] = tmp << (8 - (field_info_p->number_of_bits % 8));
+    }
 
     // raises MemoryError
-    mp_obj_t value_p = mp_obj_new_bytes(buf_p, number_of_bytes);
-
-    return value_p;
+    return mp_obj_new_bytes(buf_p, size);
 }
 
 static void pack_zero_padding(struct bitstream_writer_t* self_p,
@@ -434,10 +443,6 @@ static void field_info_init_raw(struct field_info_t* self_p,
                                 int number_of_bits){
     self_p->pack = pack_raw;
     self_p->unpack = unpack_raw;
-
-    if((number_of_bits % 8) != 0){
-        mp_raise_NotImplementedError("Raw not multiple of 8 bits.");
-    }
 }
 
 static void field_info_init_zero_padding(struct field_info_t* self_p){
