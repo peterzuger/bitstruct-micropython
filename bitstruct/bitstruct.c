@@ -76,6 +76,12 @@ struct info_t{
 };
 
 /**
+ * Python: bitstruct.Error(msg)
+ * @param msg
+ */
+MP_DEFINE_EXCEPTION(Error, Exception);
+
+/**
  * @raises TypeError
  */
 static void is_names_list(mp_obj_t names_p){
@@ -954,8 +960,6 @@ static mp_obj_t fill_pading_from_kwarg(mp_map_t* kw_args){
                      MP_ARRAY_SIZE(allowed_args), allowed_args, (mp_arg_val_t*)&args);
     return mp_obj_new_bool(args.fill_padding.u_bool);
 }
-
-MP_DEFINE_EXCEPTION(Error, Exception);
 
 typedef struct _bitstruct_CompiledFormat_obj_t{
     // base represents some basic information, like type
