@@ -955,6 +955,7 @@ static mp_obj_t fill_pading_from_kwarg(mp_map_t* kw_args){
     return mp_obj_new_bool(args.fill_padding.u_bool);
 }
 
+MP_DEFINE_EXCEPTION(Error, Exception);
 
 typedef struct _bitstruct_CompiledFormat_obj_t{
     // base represents some basic information, like type
@@ -1614,6 +1615,7 @@ STATIC const mp_map_elem_t bitstruct_globals_table[] = {
 
     { MP_OBJ_NEW_QSTR(MP_QSTR_CompiledFormat),     (mp_obj_t)&bitstruct_CompiledFormat_type      },
     { MP_OBJ_NEW_QSTR(MP_QSTR_CompiledFormatDict), (mp_obj_t)&bitstruct_CompiledFormatDict_type  },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_Error),              (mp_obj_t)&mp_type_Error                      },
 };
 
 STATIC MP_DEFINE_CONST_DICT(
