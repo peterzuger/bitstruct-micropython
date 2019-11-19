@@ -425,7 +425,9 @@ static void field_info_init_float(struct field_info_t* self_p,
 #endif /* __SIZEOF_DOUBLE__ == 8 */
 
     default:
-        mp_raise_NotImplementedError("Float size not supported.");
+        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error,
+                                                "expected float size of 16, 32, or 64 bits (got %d)",
+                                                (uint)number_of_bits));
     }
 }
 
@@ -511,7 +513,9 @@ static void field_info_init(struct field_info_t* self_p,
         break;
 
     default:
-        mp_raise_ValueError("Bad format field.");
+        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error,
+                                                "bad char '%c' in format",
+                                                (uint)kind));
         break;
     }
 
@@ -546,6 +550,7 @@ const char* parse_field(const char* format_p,
                         int* kind_p,
                         int* number_of_bits_p,
                         bool* bitorder){
+    const char* tmp_format = format_p;
     while(isspace(*format_p)){
         format_p++;
     }
@@ -578,7 +583,9 @@ const char* parse_field(const char* format_p,
     }
 
     if(*number_of_bits_p == 0){
-        mp_raise_ValueError("Field of size 0.");
+        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error,
+                                                "bad format '%s'",
+                                                tmp_format));
     }
 
     return format_p;
@@ -668,7 +675,10 @@ static mp_obj_t pack(struct info_t* info_p,
                      int consumed_args,
                      size_t number_of_args){
     if(number_of_args < info_p->number_of_non_padding_fields){
-        mp_raise_ValueError("Too few arguments.");
+        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error,
+                                                "pack expected %d item(s) for packing (got %d)",
+                                                (uint)info_p->number_of_non_padding_fields,
+                                                (uint)number_of_args));
     }
 
     // raises MemoryError
@@ -707,7 +717,10 @@ static mp_obj_t unpack(struct info_t* info_p, mp_obj_t data_p, long offset){
     }
 
     if(size < ((info_p->number_of_bits + offset + 7) / 8)){
-        mp_raise_ValueError("Short data.");
+        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error,
+                                                "unpack requires at least %d bits to unpack (got %d)",
+                                                (uint)(info_p->number_of_bits),
+                                                (uint)(size * 8)));
     }
 
     struct bitstream_reader_t reader;

@@ -75,10 +75,10 @@ class BitStructTest(unittest.TestCase):
         self.assertEqual(packed, b'\x3f\xf0\x00\x00\x00\x00\x00\x00')
 
         # Too many values to pack.
-        with self.assertRaises(ValueError) as cm:
+        with self.assertRaises(Error) as cm:
             pack('b1t24', False)
 
-        self.assertEqual(str(cm.exception), 'Too few arguments.')
+        self.assertEqual(str(cm.exception), 'pack expected 2 item(s) for packing (got 1)')
 
         # Cannot convert argument to integer.
         with self.assertRaises(TypeError) as cm:
@@ -176,16 +176,16 @@ class BitStructTest(unittest.TestCase):
         self.assertEqual(packed, 1000 * b'\x37')
 
         # Bad float size.
-        with self.assertRaises(NotImplementedError) as cm:
+        with self.assertRaises(Error) as cm:
             unpack('f33', b'\x00\x00\x00\x00\x00')
 
-        self.assertEqual(str(cm.exception), 'Float size not supported.')
+        self.assertEqual(str(cm.exception), 'expected float size of 16, 32, or 64 bits (got 33)')
 
         # Too many bits to unpack.
-        with self.assertRaises(ValueError) as cm:
+        with self.assertRaises(Error) as cm:
             unpack('u9', b'\x00')
 
-        self.assertEqual(str(cm.exception), 'Short data.')
+        self.assertEqual(str(cm.exception), 'unpack requires at least 9 bits to unpack (got 8)')
 
         # gcc packed struct with bitfields
         #
@@ -417,15 +417,15 @@ class BitStructTest(unittest.TestCase):
 
         """
 
-        with self.assertRaises(NotImplementedError) as cm:
+        with self.assertRaises(Error) as cm:
             pack('f31', 1.0)
 
-        self.assertEqual(str(cm.exception), 'Float size not supported.')
+        self.assertEqual(str(cm.exception), 'expected float size of 16, 32, or 64 bits (got 31)')
 
-        with self.assertRaises(NotImplementedError) as cm:
+        with self.assertRaises(Error) as cm:
             unpack('f33', 8 * b'\x00')
 
-        self.assertEqual(str(cm.exception), 'Float size not supported.')
+        self.assertEqual(str(cm.exception), 'expected float size of 16, 32, or 64 bits (got 33)')
 
     def test_bad_format(self):
         """Test of bad format.
@@ -433,20 +433,20 @@ class BitStructTest(unittest.TestCase):
         """
 
         formats = [
-            ('g1', "Bad format field."),
-            ('s1u1f32b1t8r8G13', "Bad format field."),
-            ('s1u1f32b1t8r8G13S3', "Bad format field."),
-            ('s', "Field of size 0."),
-#            ('1', "Bad format field."),
-            ('ss1', "Field of size 0."),
-            ('1s', "Field of size 0."),
-            ('foo', "Field of size 0."),
-            ('s>1>', "Field of size 0."),
-            ('s0', "Field of size 0.")
+            ('g1', "bad char 'g' in format"),
+            ('s1u1f32b1t8r8G13', "bad char 'G' in format"),
+            ('s1u1f32b1t8r8G13S3', "bad char 'G' in format"),
+            ('s', "bad format 's'"),
+#            ('1', "bad format '1'"),
+            ('ss1', "bad format 'ss1'"),
+            ('1s', "bad format '1s'"),
+            ('foo', "bad format 'foo'"),
+            ('s>1>', "bad format 's>1>'"),
+            ('s0', "bad format 's0'")
         ]
 
         for fmt, expected_error in formats:
-            with self.assertRaises(ValueError) as cm:
+            with self.assertRaises(Error) as cm:
                 bitstruct.compile(fmt)
 
             self.assertEqual(str(cm.exception), expected_error)
@@ -544,15 +544,15 @@ class BitStructTest(unittest.TestCase):
         unpacked = unpack_from('u1u1s6u7u9', b'\x1f\x41\x0b\x00', 1)
         self.assertEqual(unpacked, (0, 0, -2, 65, 22))
 
-        with self.assertRaises(ValueError) as cm:
+        with self.assertRaises(Error) as cm:
             unpack_from('u1u1s6u7u9', b'\x1f\x41\x0b', 1)
 
-        self.assertEqual(str(cm.exception), 'Short data.')
+        self.assertEqual(str(cm.exception), 'unpack requires at least 24 bits to unpack (got 24)')
 
-        with self.assertRaises(ValueError) as cm:
+        with self.assertRaises(Error) as cm:
             unpack_from('u1u1s6u7u9', b'\x1f\x41\x0b', 1)
 
-        self.assertEqual(str(cm.exception), 'Short data.')
+        self.assertEqual(str(cm.exception), 'unpack requires at least 24 bits to unpack (got 24)')
 
     def test_pack_integers_value_checks(self):
         """Pack integer values range checks.
