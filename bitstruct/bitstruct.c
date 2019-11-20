@@ -864,8 +864,7 @@ static void pack_dict_pack(struct info_t* info_p,
             consumed_args++;
 
             if(value_p == mp_const_none){
-                mp_raise_msg(&mp_type_KeyError, "Missing value.");
-                break;
+                mp_raise_msg(&mp_type_Error, "Missing value.");
             }
         }
 
