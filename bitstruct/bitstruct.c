@@ -720,7 +720,7 @@ static mp_obj_t unpack(struct info_t* info_p, mp_obj_t data_p, long offset){
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error,
                                                 "unpack requires at least %d bits to unpack (got %d)",
                                                 (uint)(info_p->number_of_bits),
-                                                (uint)(size * 8)));
+                                                (uint)(size * 8) - offset));
     }
 
     struct bitstream_reader_t reader;
