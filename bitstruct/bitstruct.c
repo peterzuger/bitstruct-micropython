@@ -854,8 +854,13 @@ static void pack_dict_pack(struct info_t* info_p,
         if(field_p->is_padding){
             value_p = fill_padding;
         }else{
-            // raises KeyError
-            value_p = mp_obj_dict_get(data_p, items[consumed_args]);
+            mp_obj_dict_t *self = MP_OBJ_TO_PTR(data_p);
+            mp_map_elem_t *elem = mp_map_lookup(&self->map, items[consumed_args], MP_MAP_LOOKUP);
+            if(elem == NULL)
+                nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error,
+                                                        "'%s' not found in data dictionary",
+                                                        mp_obj_str_get_str(items[consumed_args])));
+            value_p = elem->value;
             consumed_args++;
 
             if(value_p == mp_const_none){
