@@ -691,18 +691,18 @@ class BitStructTest(unittest.TestCase):
             ('u1s2p3',   ['a', 'b'], {'a': 1, 'b': -1})
         ]
 
-        # for fmt, names, decoded in fmts:
-        #     if names is None:
-        #         cf = bitstruct.compile(fmt)
-        #         packed_1 = cf.pack(*decoded)
-        #         packed_2 = pack(fmt, *decoded)
-        #     else:
-        #         cf = bitstruct.compile(fmt, names)
-        #         packed_1 = cf.pack(decoded)
-        #         packed_2 = pack_dict(fmt, names, decoded)
+        for fmt, names, decoded in fmts:
+            if names is None:
+                cf = bitstruct.compile(fmt)
+                packed_1 = cf.pack(*decoded)
+                packed_2 = pack(fmt, *decoded)
+            else:
+                cf = bitstruct.compile(fmt, names)
+                packed_1 = cf.pack(decoded)
+                packed_2 = pack_dict(fmt, names, decoded)
 
-        #     self.assertEqual(packed_1, b'\xe0')
-        #     self.assertEqual(packed_2, b'\xe0')
+            self.assertEqual(packed_1, b'\xe0')
+            self.assertEqual(packed_2, b'\xe0')
 
     def test_compile_formats(self):
         bitstruct.compile('p1u1')
