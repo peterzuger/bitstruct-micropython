@@ -241,8 +241,8 @@ class BitStructTest(unittest.TestCase):
         size = calcsize('u1')
         self.assertEqual(size, 1)
 
-        # size = calcsize('u77')
-        # self.assertEqual(size, 77)
+        size = calcsize('u77')
+        self.assertEqual(size, 77)
 
         size = calcsize('u1s6u7u9')
         self.assertEqual(size, 23)
