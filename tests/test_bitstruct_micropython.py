@@ -78,31 +78,36 @@ class BitStructTest(unittest.TestCase):
         with self.assertRaises(Error) as cm:
             pack('b1t24', False)
 
-        self.assertEqual(str(cm.exception), 'pack expected 2 item(s) for packing (got 1)')
+        self.assertEqual(str(cm.exception),
+                         'pack expected 2 item(s) for packing (got 1)')
 
         # Cannot convert argument to integer.
         with self.assertRaises(TypeError) as cm:
             pack('u1', 'foo')
 
-        self.assertEqual(str(cm.exception), "can't convert str to int")
+        self.assertEqual(str(cm.exception),
+                         "can't convert str to int")
 
         # Cannot convert argument to float.
         with self.assertRaises(TypeError) as cm:
             pack('f32', 'foo')
 
-        self.assertEqual(str(cm.exception), "can't convert str to float")
+        self.assertEqual(str(cm.exception),
+                         "can't convert str to float")
 
         # Cannot convert argument to bytearray.
         with self.assertRaises(TypeError) as cm:
             pack('r5', 1.0)
 
-        self.assertEqual(str(cm.exception), "can't convert 'float' object to str implicitly")
+        self.assertEqual(str(cm.exception),
+                         "can't convert 'float' object to str implicitly")
 
         # Cannot encode argument as utf-8.
         with self.assertRaises(TypeError) as cm:
             pack('t8', 1.0)
 
-        self.assertEqual(str(cm.exception), "can't convert 'float' object to str implicitly")
+        self.assertEqual(str(cm.exception),
+                         "can't convert 'float' object to str implicitly")
 
     def test_unpack(self):
         """Unpack values.
@@ -179,13 +184,15 @@ class BitStructTest(unittest.TestCase):
         with self.assertRaises(Error) as cm:
             unpack('f33', b'\x00\x00\x00\x00\x00')
 
-        self.assertEqual(str(cm.exception), 'expected float size of 16, 32, or 64 bits (got 33)')
+        self.assertEqual(str(cm.exception),
+                         'expected float size of 16, 32, or 64 bits (got 33)')
 
         # Too many bits to unpack.
         with self.assertRaises(Error) as cm:
             unpack('u9', b'\x00')
 
-        self.assertEqual(str(cm.exception), 'unpack requires at least 9 bits to unpack (got 8)')
+        self.assertEqual(str(cm.exception),
+                         'unpack requires at least 9 bits to unpack (got 8)')
 
         # gcc packed struct with bitfields
         #
@@ -420,12 +427,14 @@ class BitStructTest(unittest.TestCase):
         with self.assertRaises(Error) as cm:
             pack('f31', 1.0)
 
-        self.assertEqual(str(cm.exception), 'expected float size of 16, 32, or 64 bits (got 31)')
+        self.assertEqual(str(cm.exception),
+                         'expected float size of 16, 32, or 64 bits (got 31)')
 
         with self.assertRaises(Error) as cm:
             unpack('f33', 8 * b'\x00')
 
-        self.assertEqual(str(cm.exception), 'expected float size of 16, 32, or 64 bits (got 33)')
+        self.assertEqual(str(cm.exception),
+                         'expected float size of 16, 32, or 64 bits (got 33)')
 
     def test_bad_format(self):
         """Test of bad format.
@@ -508,33 +517,23 @@ class BitStructTest(unittest.TestCase):
 
         packed = bytearray(2)
 
-        with self.assertRaises(ValueError) as cm:
+        with self.assertRaises(Error) as cm:
             pack_into('u17', packed, 0, 1)
 
-        self.assertEqual(str(cm.exception), 'pack_into requires a buffer of at least enough bits')
-
-        with self.assertRaises(ValueError) as cm:
-            pack_into('u17', packed, 0, 1)
-
-        self.assertEqual(str(cm.exception), 'pack_into requires a buffer of at least enough bits')
+        self.assertEqual(str(cm.exception),
+                         'pack_into requires a buffer of at least 17 bits')
 
         packed = bytearray(b'\x00')
         pack_into('P4u4', packed, 0, 1)
         self.assertEqual(packed, b'\xf1')
 
         # Too many values to pack.
-        with self.assertRaises(ValueError) as cm:
+        with self.assertRaises(Error) as cm:
             packed = bytearray(b'\x00')
             pack_into('b1t24', packed, 0, False)
 
-        self.assertEqual(str(cm.exception), 'Too few arguments.')
-
-        # Too many values to pack.
-        with self.assertRaises(ValueError) as cm:
-            packed = bytearray(b'\x00')
-            pack_into('b1t24', packed, 0, False)
-
-        self.assertEqual(str(cm.exception), 'Too few arguments.')
+        self.assertEqual(str(cm.exception),
+                         'pack expected 2 item(s) for packing (got 1)')
 
     def test_unpack_from(self):
         """Unpack values at given bit offset.
@@ -547,12 +546,9 @@ class BitStructTest(unittest.TestCase):
         with self.assertRaises(Error) as cm:
             unpack_from('u1u1s6u7u9', b'\x1f\x41\x0b', 1)
 
-        self.assertEqual(str(cm.exception), 'unpack requires at least 24 bits to unpack (got 24)')
-
-        with self.assertRaises(Error) as cm:
-            unpack_from('u1u1s6u7u9', b'\x1f\x41\x0b', 1)
-
-        self.assertEqual(str(cm.exception), 'unpack requires at least 24 bits to unpack (got 24)')
+        self.assertEqual(str(cm.exception),
+                         'unpack requires at least 24 bits to unpack '
+                         '(got 23)')
 
     def test_pack_integers_value_checks(self):
         """Pack integer values range checks.
@@ -564,21 +560,6 @@ class BitStructTest(unittest.TestCase):
             ('s1', -1, 0),
             ('s2', -2, 1),
             ('s3', -4, 3),
-        ]
-
-        for fmt, minimum, maximum in datas:
-            # No exception should be raised for numbers in range.
-            pack(fmt, minimum)
-            pack(fmt, maximum)
-
-            # Numbers out of range.
-            for number in [minimum - 1, maximum + 1]:
-                with self.assertRaises(OverflowError) as cm:
-                    pack(fmt, number)
-                self.assertEqual(str(cm.exception), 'Signed integer out of range.')
-
-        # Formats with minimum and maximum allowed values.
-        datas = [
             ('u1',  0, 1),
             ('u2',  0, 3),
             ('u3',  0, 7)
@@ -591,9 +572,16 @@ class BitStructTest(unittest.TestCase):
 
             # Numbers out of range.
             for number in [minimum - 1, maximum + 1]:
-                with self.assertRaises(OverflowError) as cm:
+                with self.assertRaises(Error) as cm:
                     pack(fmt, number)
-                self.assertEqual(str(cm.exception), 'Unsigned integer out of range.')
+
+                self.assertEqual(
+                    str(cm.exception),
+                    '"{}" requires {} <= integer <= {} (got {})'.format(
+                        fmt,
+                        minimum,
+                        maximum,
+                        number))
 
     def test_pack_unpack_raw(self):
         """Pack and unpack raw values.
@@ -683,16 +671,18 @@ class BitStructTest(unittest.TestCase):
         fmt = 'u1u1s6u7u9'
         names = ['foo', 'bar', 'fie', 'fum', 'fam']
 
-        with self.assertRaises(KeyError) as cm:
+        with self.assertRaises(Error) as cm:
             pack_dict(fmt, names, unpacked)
 
-        self.assertEqual(str(cm.exception), "fam")
+        self.assertEqual(str(cm.exception),
+                         "'fam' not found in data dictionary")
 
-        with self.assertRaises(KeyError) as cm:
+        with self.assertRaises(Error) as cm:
             data = bytearray(3)
             pack_into_dict(fmt, names, data, 0, unpacked)
 
-        self.assertEqual(str(cm.exception), "fam")
+        self.assertEqual(str(cm.exception),
+                         "'fam' not found in data dictionary")
 
     def test_compile_pack_unpack_formats(self):
         fmts = [
