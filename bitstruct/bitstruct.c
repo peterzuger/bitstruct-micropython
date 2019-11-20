@@ -786,9 +786,10 @@ static void pack_into_prepare(struct info_t* info_p,
     uint8_t* packed_p = ((mp_obj_array_t*)buf_p)->items;
     size_t size = ((mp_obj_array_t*)buf_p)->len;
 
-    if(size < ((info_p->number_of_bits + offset + 7) / 8)){
-        mp_raise_ValueError("pack_into requires a buffer of at least enough bits");
-    }
+    if(size < ((info_p->number_of_bits + offset + 7) / 8))
+        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error,
+                                                "pack_into requires a buffer of at least %d bits",
+                                                (uint)info_p->number_of_bits));
 
     bitstream_writer_init(writer_p, packed_p);
     bitstream_writer_bounds_save(bounds_p,
@@ -814,9 +815,11 @@ static mp_obj_t pack_into(struct info_t* info_p,
     struct bitstream_writer_t writer;
     struct bitstream_writer_bounds_t bounds;
 
-    if((number_of_args - consumed_args) < info_p->number_of_non_padding_fields){
-        mp_raise_ValueError("Too few arguments.");
-    }
+    if((number_of_args - consumed_args) < info_p->number_of_non_padding_fields)
+        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error,
+                                                "pack expected %d item(s) for packing (got %d)",
+                                                (uint)info_p->number_of_non_padding_fields,
+                                                (uint)(number_of_args - consumed_args)));
 
     // raises TypeError, ValueError
     pack_into_prepare(info_p, buf_p, offset_p, &writer, &bounds);
