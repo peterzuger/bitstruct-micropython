@@ -64,9 +64,9 @@ class BitStructTest(unittest.TestCase):
         packed = pack('t8000', 1000 * '7')
         self.assertEqual(packed, 1000 * b'\x37')
 
-        # if sys.version_info >= (3, 6):
-        #     packed = pack('f16', 1.0)
-        #     self.assertEqual(packed, b'\x3c\x00')
+        if sys.version_info >= (3, 6):
+            packed = pack('f16', 1.0)
+            self.assertEqual(packed, b'\x3c\x00')
 
         packed = pack('f32', 1.0)
         self.assertEqual(packed, b'\x3f\x80\x00\x00')
@@ -225,10 +225,10 @@ class BitStructTest(unittest.TestCase):
         unpacked = unpack('f64', packed)
         self.assertEqual(unpacked, (1.0, ))
 
-        # if sys.version_info >= (3, 6):
-        #     packed = pack('f16', 1.0)
-        #     unpacked = unpack('f16', packed)
-        #     self.assertEqual(unpacked, (1.0, ))
+        if sys.version_info >= (3, 6):
+            packed = pack('f16', 1.0)
+            unpacked = unpack('f16', packed)
+            self.assertEqual(unpacked, (1.0, ))
 
     def test_calcsize(self):
         """Calculate size.
