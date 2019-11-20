@@ -112,7 +112,11 @@ static void pack_signed_integer(struct bitstream_writer_t* self_p,
     int64_t upper = (limit - 1);
 
     if((value < lower) || (value > upper))
-        mp_raise_msg(&mp_type_OverflowError, "Signed integer out of range.");
+        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error, "\"s%d\" requires %d <= integer <= %d (got %d)",
+                                                field_info_p->number_of_bits,
+                                                lower,
+                                                upper,
+                                                value));
 
     if(field_info_p->number_of_bits < 64){
         value &= ((1ull << field_info_p->number_of_bits) - 1);
@@ -169,7 +173,10 @@ static void pack_unsigned_integer(struct bitstream_writer_t* self_p,
         upper = (uint64_t)-1;
 
     if(value > upper)
-        mp_raise_msg(&mp_type_OverflowError, "Unsigned integer out of range.");
+        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error, "\"u%d\" requires 0 <= integer <= %d (got %d)",
+                                                field_info_p->number_of_bits,
+                                                upper,
+                                                value));
 
     bitstream_writer_write_u64_bits(self_p,
                                     value,
