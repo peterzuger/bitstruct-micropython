@@ -82,14 +82,14 @@ class BitStructTest(unittest.TestCase):
                          'pack expected 2 item(s) for packing (got 1)')
 
         # Cannot convert argument to integer.
-        with self.assertRaises(TypeError) as cm:
+        with self.assertRaises(ValueError) as cm:
             pack('u1', 'foo')
 
         self.assertEqual(str(cm.exception),
                          "can't convert str to int")
 
         # Cannot convert argument to float.
-        with self.assertRaises(TypeError) as cm:
+        with self.assertRaises(ValueError) as cm:
             pack('f32', 'foo')
 
         self.assertEqual(str(cm.exception),

@@ -102,29 +102,33 @@ static void pack_signed_integer(struct bitstream_writer_t* self_p,
     if(mp_obj_is_type(value_p, &mp_type_int)){
         // TODO
         return;
+
+    }else if(mp_obj_is_integer(value_p)){
+        // raises TypeError
+        int64_t value = mp_obj_get_int(value_p);
+
+        uint64_t limit = (1ull << (field_info_p->number_of_bits - 1));
+        int64_t lower = -limit;
+        int64_t upper = (limit - 1);
+
+        if((value < lower) || (value > upper))
+            nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error, "\"s%d\" requires %d <= integer <= %d (got %d)",
+                                                    field_info_p->number_of_bits,
+                                                    lower,
+                                                    upper,
+                                                    value));
+
+        if(field_info_p->number_of_bits < 64){
+            value &= ((1ull << field_info_p->number_of_bits) - 1);
+        }
+
+        bitstream_writer_write_u64_bits(self_p,
+                                        (uint64_t)value,
+                                        field_info_p->number_of_bits);
+    }else{
+        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
+                                                "can't convert %s to int", mp_obj_get_type_str(value_p)));
     }
-
-    // raises TypeError
-    int64_t value = mp_obj_get_int(value_p);
-
-    uint64_t limit = (1ull << (field_info_p->number_of_bits - 1));
-    int64_t lower = -limit;
-    int64_t upper = (limit - 1);
-
-    if((value < lower) || (value > upper))
-        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error, "\"s%d\" requires %d <= integer <= %d (got %d)",
-                                                field_info_p->number_of_bits,
-                                                lower,
-                                                upper,
-                                                value));
-
-    if(field_info_p->number_of_bits < 64){
-        value &= ((1ull << field_info_p->number_of_bits) - 1);
-    }
-
-    bitstream_writer_write_u64_bits(self_p,
-                                    (uint64_t)value,
-                                    field_info_p->number_of_bits);
 }
 
 static mp_obj_t unpack_signed_integer(struct bitstream_reader_t* self_p,
@@ -161,26 +165,30 @@ static void pack_unsigned_integer(struct bitstream_writer_t* self_p,
             bitstream_writer_write_bytes(self_p, buffer, field_info_p->number_of_bits / 8);
         }
         return;
+    }else if(mp_obj_is_integer(value_p)){
+        // raises TypeError
+        uint64_t value = mp_obj_get_int(value_p);
+
+        uint64_t upper;
+        if(field_info_p->number_of_bits < 64)
+            upper = ((1ull << field_info_p->number_of_bits) - 1);
+        else
+            upper = (uint64_t)-1;
+
+        if(value > upper)
+            nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error, "\"u%d\" requires 0 <= integer <= %d (got %d)",
+                                                    field_info_p->number_of_bits,
+                                                    upper,
+                                                    value));
+
+        bitstream_writer_write_u64_bits(self_p,
+                                        value,
+                                        field_info_p->number_of_bits);
+
+    }else{
+        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
+                                                "can't convert %s to int", mp_obj_get_type_str(value_p)));
     }
-
-    // raises TypeError
-    uint64_t value = mp_obj_get_int(value_p);
-
-    uint64_t upper;
-    if(field_info_p->number_of_bits < 64)
-        upper = ((1ull << field_info_p->number_of_bits) - 1);
-    else
-        upper = (uint64_t)-1;
-
-    if(value > upper)
-        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error, "\"u%d\" requires 0 <= integer <= %d (got %d)",
-                                                field_info_p->number_of_bits,
-                                                upper,
-                                                value));
-
-    bitstream_writer_write_u64_bits(self_p,
-                                    value,
-                                    field_info_p->number_of_bits);
 }
 
 static mp_obj_t unpack_unsigned_integer(struct bitstream_reader_t* self_p,
@@ -197,13 +205,18 @@ static mp_obj_t unpack_unsigned_integer(struct bitstream_reader_t* self_p,
 static void pack_float_16(struct bitstream_writer_t* self_p,
                           mp_obj_t value_p,
                           struct field_info_t* field_info_p){
-    // relies on sizeof(float) == 4 this is always the case with gcc
-    // raises TypeError
-    _Float16 value = (_Float16)mp_obj_get_float(value_p);
+    if(mp_obj_is_float(value_p)){
+        // relies on sizeof(float) == 4 this is always the case with gcc
+        // raises TypeError
+        _Float16 value = (_Float16)mp_obj_get_float(value_p);
 
-    uint16_t data;
-    memcpy(&data, &value, sizeof(data));
-    bitstream_writer_write_u16(self_p, data);
+        uint16_t data;
+        memcpy(&data, &value, sizeof(data));
+        bitstream_writer_write_u16(self_p, data);
+    }else{
+        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
+                                                "can't convert %s to float", mp_obj_get_type_str(value_p)));
+    }
 }
 
 static mp_obj_t unpack_float_16(struct bitstream_reader_t* self_p,
@@ -224,13 +237,18 @@ static mp_obj_t unpack_float_16(struct bitstream_reader_t* self_p,
 static void pack_float_32(struct bitstream_writer_t* self_p,
                           mp_obj_t value_p,
                           struct field_info_t* field_info_p){
-    // relies on sizeof(float) == 4 this is always the case with gcc
-    // raises TypeError
-    float value = (float)mp_obj_get_float(value_p);
+    if(mp_obj_is_float(value_p)){
+        // relies on sizeof(float) == 4 this is always the case with gcc
+        // raises TypeError
+        float value = (float)mp_obj_get_float(value_p);
 
-    uint32_t data;
-    memcpy(&data, &value, sizeof(data));
-    bitstream_writer_write_u32(self_p, data);
+        uint32_t data;
+        memcpy(&data, &value, sizeof(data));
+        bitstream_writer_write_u32(self_p, data);
+    }else{
+        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
+                                                "can't convert %s to float", mp_obj_get_type_str(value_p)));
+    }
 }
 
 static mp_obj_t unpack_float_32(struct bitstream_reader_t* self_p,
@@ -251,12 +269,17 @@ static mp_obj_t unpack_float_32(struct bitstream_reader_t* self_p,
 static void pack_float_64(struct bitstream_writer_t* self_p,
                           mp_obj_t value_p,
                           struct field_info_t* field_info_p){
-    // raises TypeError
-    double value = (double)mp_obj_get_float(value_p);
+    if(mp_obj_is_float(value_p)){
+        // raises TypeError
+        double value = (double)mp_obj_get_float(value_p);
 
-    uint64_t data;
-    memcpy(&data, &value, sizeof(data));
-    bitstream_writer_write_u64(self_p, data);
+        uint64_t data;
+        memcpy(&data, &value, sizeof(data));
+        bitstream_writer_write_u64(self_p, data);
+    }else{
+        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
+                                                "can't convert %s to float", mp_obj_get_type_str(value_p)));
+    }
 }
 
 static mp_obj_t unpack_float_64(struct bitstream_reader_t* self_p,
