@@ -164,7 +164,6 @@ static void pack_unsigned_integer(struct bitstream_writer_t* self_p,
             }
             bitstream_writer_write_bytes(self_p, buffer, field_info_p->number_of_bits / 8);
         }
-        return;
     }else if(mp_obj_is_integer(value_p)){
         // raises TypeError
         uint64_t value = mp_obj_get_int(value_p);
