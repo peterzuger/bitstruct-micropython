@@ -100,9 +100,26 @@ static void pack_signed_integer(struct bitstream_writer_t* self_p,
                                 mp_obj_t value_p,
                                 struct field_info_t* field_info_p){
     if(mp_obj_is_type(value_p, &mp_type_int)){
-        // TODO
-        return;
+        field_info_p->number_of_bits--;
+        size_t size = (field_info_p->number_of_bits + 7) / 8;
+        uint8_t* buffer = alloca(size);
+        mp_obj_int_to_bytes_impl(value_p, field_info_p->bitorder, size, buffer);
+        int sign = ((mp_obj_int_t*)value_p)->mpz.neg;
 
+        if(!field_info_p->bitorder){
+            for(size_t i = 0; i < (field_info_p->number_of_bits / 8); ++i)
+                bitstream_writer_write_u8(self_p, reverse(buffer[i]));
+            for(size_t i = 0; i < (field_info_p->number_of_bits % 8); ++i)
+                bitstream_writer_write_bit(self_p, buffer[size - 1] >> i);
+            bitstream_writer_write_bit(self_p, sign);
+        }else{
+            bitstream_writer_write_bit(self_p, sign);
+            if(field_info_p->number_of_bits % 8){
+                bitstream_writer_write_u64_bits(self_p, buffer[0], field_info_p->number_of_bits % 8);
+                buffer++;
+            }
+            bitstream_writer_write_bytes(self_p, buffer, field_info_p->number_of_bits / 8);
+        }
     }else if(mp_obj_is_integer(value_p)){
         // raises TypeError
         int64_t value = mp_obj_get_int(value_p);
