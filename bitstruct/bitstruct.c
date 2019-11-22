@@ -296,13 +296,15 @@ static void pack_text(struct bitstream_writer_t* self_p,
     size_t size;
     const char* buf_p = mp_obj_str_get_data(value_p, &size);
 
-    if(size < (field_info_p->number_of_bits / 8)){
-        mp_raise_NotImplementedError("Short text.");
-    }else{
-        bitstream_writer_write_bytes(self_p,
-                                     (uint8_t*)buf_p,
-                                     field_info_p->number_of_bits / 8);
-    }
+    size_t required_bytes = field_info_p->number_of_bits / 8;
+    size_t bytes_from_input = required_bytes > size ? size : required_bytes;
+
+    bitstream_writer_write_bytes(self_p,
+                                 (uint8_t*)buf_p,
+                                 bytes_from_input);
+
+    if(size < required_bytes)
+        bitstream_writer_write_repeated_u8(self_p, 0, required_bytes - size);
 }
 
 static mp_obj_t unpack_text(struct bitstream_reader_t* self_p,
