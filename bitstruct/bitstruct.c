@@ -334,15 +334,21 @@ static void pack_raw(struct bitstream_writer_t* self_p,
         buf_p = (char*)mp_obj_str_get_data(value_p, &size);
     }
 
-    if(size < (field_info_p->number_of_bits / 8))
-        mp_raise_NotImplementedError("Short raw data.");
+    size_t required_bytes = field_info_p->number_of_bits / 8;
+    size_t bytes_from_input = required_bytes > size ? size : required_bytes;
 
     bitstream_writer_write_bytes(self_p,
                                  (uint8_t*)buf_p,
-                                 field_info_p->number_of_bits / 8);
+                                 bytes_from_input);
+
+    if(size < required_bytes)
+        bitstream_writer_write_repeated_u8(self_p, 0, required_bytes - size);
 
     if(field_info_p->number_of_bits % 8){
-        uint8_t tmp = buf_p[field_info_p->number_of_bits / 8];
+        uint8_t tmp = 0;
+        if(((field_info_p->number_of_bits + 7) / 8) <= size)
+            tmp = buf_p[required_bytes];
+
         bitstream_writer_write_u64_bits(self_p,
                                         tmp >> (8 - (field_info_p->number_of_bits % 8)),
                                         field_info_p->number_of_bits % 8);

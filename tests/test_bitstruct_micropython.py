@@ -588,10 +588,10 @@ class BitStructTest(unittest.TestCase):
 
         """
 
-        # packed = pack('r24', b'')
-        # self.assertEqual(packed, b'\x00\x00\x00')
-        # packed = pack('r24', b'12')
-        # self.assertEqual(packed, b'12\x00')
+        packed = pack('r24', b'')
+        self.assertEqual(packed, b'\x00\x00\x00')
+        packed = pack('r24', b'12')
+        self.assertEqual(packed, b'12\x00')
         packed = pack('r24', b'123')
         self.assertEqual(packed, b'123')
         packed = pack('r24', b'1234')
