@@ -611,6 +611,7 @@ const char* parse_field(const char* format_p,
 
     switch(*format_p){
     case '<':
+        mp_raise_NotImplementedError("bitorder little endian first in format");
         *bitorder = BITORDER_LSBFIRST;
         format_p++;
         break;
@@ -677,6 +678,7 @@ static struct info_t* parse_format(mp_obj_t format_obj_p){
 
     switch(*format_p){
     case '<':
+        mp_raise_NotImplementedError("byteorder LSB first in format");
         info_p->byteorder = BYTEORDER_LSBFIRST;
         break;
     case '>':
