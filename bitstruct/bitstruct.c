@@ -121,6 +121,9 @@ static void pack_signed_integer(struct bitstream_writer_t* self_p,
             bitstream_writer_write_bytes(self_p, buffer, field_info_p->number_of_bits / 8);
         }
     }else if(mp_obj_is_integer(value_p)){
+        if(field_info_p->number_of_bits > 64)
+            mp_raise_NotImplementedError("unsigned integer over 64 bits");
+
         // raises TypeError
         int64_t value = mp_obj_get_int(value_p);
 
@@ -150,6 +153,9 @@ static void pack_signed_integer(struct bitstream_writer_t* self_p,
 
 static mp_obj_t unpack_signed_integer(struct bitstream_reader_t* self_p,
                                       struct field_info_t* field_info_p){
+    if(field_info_p->number_of_bits > 64)
+        mp_raise_NotImplementedError("signed integer over 64 bits");
+
     uint64_t value = bitstream_reader_read_u64_bits(self_p, field_info_p->number_of_bits);
     uint64_t sign_bit = (1ull << (field_info_p->number_of_bits - 1));
 
@@ -182,6 +188,9 @@ static void pack_unsigned_integer(struct bitstream_writer_t* self_p,
             bitstream_writer_write_bytes(self_p, buffer, field_info_p->number_of_bits / 8);
         }
     }else if(mp_obj_is_integer(value_p)){
+        if(field_info_p->number_of_bits > 64)
+            mp_raise_NotImplementedError("unsigned integer over 64 bits");
+
         // raises TypeError
         uint64_t value = mp_obj_get_int(value_p);
 
@@ -191,6 +200,7 @@ static void pack_unsigned_integer(struct bitstream_writer_t* self_p,
         else
             upper = (uint64_t)-1;
 
+        // TODO: implement output of large integers
         if(value > upper)
             nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error, "\"u%d\" requires 0 <= integer <= %d (got %d)",
                                                     field_info_p->number_of_bits,
@@ -209,6 +219,9 @@ static void pack_unsigned_integer(struct bitstream_writer_t* self_p,
 
 static mp_obj_t unpack_unsigned_integer(struct bitstream_reader_t* self_p,
                                         struct field_info_t* field_info_p){
+    if(field_info_p->number_of_bits > 64)
+        mp_raise_NotImplementedError("unsigned integer over 64 bits");
+
     uint64_t value = bitstream_reader_read_u64_bits(self_p,
                                                     field_info_p->number_of_bits);
 
