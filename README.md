@@ -10,6 +10,8 @@
 This is a port of [eerimoq/bitstruct](https://github.com/eerimoq/bitstruct) for
 [micropython](https://github.com/micropython/micropython)
 
+For the documentation of the `bitstruct` module see here: [readthedocs](https://bitstruct.readthedocs.io/en/latest/).
+
 ## Getting Started <a name = "getting_started"></a>
 
 ### Prerequisites
