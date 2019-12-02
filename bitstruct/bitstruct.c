@@ -764,26 +764,31 @@ static mp_obj_t pack(struct info_t* info_p,
     return packed_p;
 }
 
-static mp_obj_t unpack(struct info_t* info_p, mp_obj_t data_p, long offset){
+char* bitstruct_mp_obj_get_data(mp_obj_t data_p, size_t* size){
     char* packed_p;
-    size_t size = 0;
     if(mp_obj_is_type(data_p, &mp_type_bytearray) || mp_obj_is_type(data_p, &mp_type_memoryview)){
         packed_p = ((mp_obj_array_t*)data_p)->items;
-        size = ((mp_obj_array_t*)data_p)->len;
+        *size = ((mp_obj_array_t*)data_p)->len;
     }else if(mp_obj_is_type(data_p, &mp_type_list)){
         size_t len;
         mp_obj_t* items;
         mp_obj_list_get(data_p, &len, &items);
-        size = len * sizeof(mp_int_t);
-        packed_p = alloca(size);
+        *size = len * sizeof(mp_int_t);
+        packed_p = alloca(*size);
         for(size_t j = 0; j < len; j++){
             // raises TypeError
             packed_p[j] = mp_obj_get_int(items[j]);
         }
     }else{
         // raises TypeError
-        packed_p = (char*)mp_obj_str_get_data(data_p, &size);
+        packed_p = (char*)mp_obj_str_get_data(data_p, size);
     }
+    return packed_p;
+}
+
+static mp_obj_t unpack(struct info_t* info_p, mp_obj_t data_p, long offset){
+    size_t size;
+    char* packed_p = bitstruct_mp_obj_get_data(data_p, &size);
 
     if(size < ((info_p->number_of_bits + offset + 7) / 8)){
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error,
@@ -971,9 +976,8 @@ static mp_obj_t unpack_dict(struct info_t* info_p,
     // raises MemoryError
     mp_obj_t unpacked_p = mp_obj_new_dict(0);
 
-    // raises TypeError
     size_t size;
-    char* packed_p = (char*)mp_obj_str_get_data(data_p, &size);
+    char* packed_p = bitstruct_mp_obj_get_data(data_p, &size);
 
     if(size < ((info_p->number_of_bits + offset + 7) / 8)){
         mp_raise_ValueError("Short data.");
