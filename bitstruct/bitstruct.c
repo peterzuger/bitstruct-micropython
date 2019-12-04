@@ -89,7 +89,7 @@ static void is_names_list(mp_obj_t names_p){
         mp_raise_TypeError("Names is not a list.");
 }
 
-static inline uint8_t reverse(uint8_t b) {
+static inline uint8_t reverse(uint8_t b){
     b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
     b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
     b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
@@ -1455,12 +1455,12 @@ STATIC mp_obj_t bitstruct_pack_into(size_t n_args, const mp_obj_t* args, mp_map_
 
     // raises NotImplementedError, OverflowError, TypeError, ValueError
     mp_obj_t res_p = pack_into(info_p,
-                      args[1],
-                      args[2],
-                      args,
-                      3,
-                      n_args,
-                      fill_padding);
+                               args[1],
+                               args[2],
+                               args,
+                               3,
+                               n_args,
+                               fill_padding);
     gc_free(info_p);
 
     return res_p;
