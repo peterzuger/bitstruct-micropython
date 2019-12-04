@@ -30,6 +30,10 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+#include "py/mpconfig.h"
+
+#if defined(MODULE_BITSTRUCT_ENABLED) && MODULE_BITSTRUCT_ENABLED == 1
+
 #include "py/obj.h"
 #include "py/runtime.h"
 #include "py/builtin.h"
@@ -1730,3 +1734,5 @@ const mp_obj_module_t mp_module_bitstruct = {
 };
 
 MP_REGISTER_MODULE(MP_QSTR_bitstruct, mp_module_bitstruct, MODULE_BITSTRUCT_ENABLED);
+
+#endif /* defined(MODULE_BITSTRUCT_ENABLED) && MODULE_BITSTRUCT_ENABLED == 1 */
