@@ -1,0 +1,37 @@
+image: peterzuger/arch-dev
+
+stages:
+  - prepare
+  - prebuild
+  - build
+  - test
+
+# global variables
+variables:
+  GIT_CLONE_PATH: $CI_BUILDS_DIR/bitstruct
+  MICROPYTHON_PATH: $CI_BUILDS_DIR/micropython
+
+fetch-micropython:
+  stage: prepare
+  script:
+    - git clone --recurse-submodules https://github.com/micropython/micropython.git $MICROPYTHON_PATH
+    - cd $MICROPYTHON_PATH && git pull --recurse-submodules
+  allow_failure: true
+
+mpy-cross-build:
+  stage: prebuild
+  script:
+    - make -C $MICROPYTHON_PATH/mpy-cross
+
+unix-build:
+  stage: build
+  script:
+    - make -C $MICROPYTHON_PATH/ports/unix USER_C_MODULES=$CI_BUILDS_DIR CFLAGS_EXTRA="-DMODULE_BITSTRUCT_ENABLED=1"
+  artifacts:
+    paths:
+      - $MICROPYTHON_PATH/ports/unix/micropython
+
+stm32-build:
+  stage: build
+  script:
+    - make -C $MICROPYTHON_PATH/ports/stm32 USER_C_MODULES=$CI_BUILDS_DIR CFLAGS_EXTRA="-DMODULE_BITSTRUCT_ENABLED=1"
