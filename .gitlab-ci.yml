@@ -15,10 +15,9 @@ fetch-micropython:
   stage: prepare
   script:
     - git clone --recurse-submodules https://github.com/micropython/micropython.git $MICROPYTHON_PATH
-    - cd $MICROPYTHON_PATH && git pull --recurse-submodules
   artifacts:
     paths:
-      - $MICROPYTHON_PATH
+      - $MICROPYTHON_PATH/
   allow_failure: true
 
 mpy-cross:
