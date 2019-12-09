@@ -16,6 +16,9 @@ fetch-micropython:
   script:
     - git clone --recurse-submodules https://github.com/micropython/micropython.git $MICROPYTHON_PATH
     - cd $MICROPYTHON_PATH && git pull --recurse-submodules
+  artifacts:
+    paths:
+      - $MICROPYTHON_PATH
   allow_failure: true
 
 mpy-cross:
@@ -42,3 +45,5 @@ stm32:
   stage: build
   script:
     - make -C $MICROPYTHON_PATH/ports/stm32 USER_C_MODULES=$CI_BUILDS_DIR CFLAGS_EXTRA="-DMODULE_BITSTRUCT_ENABLED=1"
+  dependencies:
+    - mpy-cross
