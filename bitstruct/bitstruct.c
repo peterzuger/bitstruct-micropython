@@ -778,7 +778,7 @@ char* bitstruct_mp_obj_get_data(mp_obj_t data_p, size_t* size){
         mp_obj_t* items;
         mp_obj_list_get(data_p, &len, &items);
         *size = len * sizeof(mp_int_t);
-        packed_p = alloca(*size);
+        packed_p = gc_alloc(*size, 0);
         for(size_t j = 0; j < len; j++){
             // raises TypeError
             packed_p[j] = mp_obj_get_int(items[j]);
@@ -823,6 +823,8 @@ static mp_obj_t unpack(struct info_t* info_p, mp_obj_t data_p, long offset){
             produced_args++;
         }
     }
+
+    gc_free(packed_p);
 
     return unpacked_p;
 }
@@ -1006,6 +1008,8 @@ static mp_obj_t unpack_dict(struct info_t* info_p,
             produced_args++;
         }
     }
+
+    gc_free(packed_p);
 
     return unpacked_p;
 }
