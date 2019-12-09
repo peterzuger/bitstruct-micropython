@@ -8,7 +8,8 @@ stages:
 
 # global variables
 variables:
-  GIT_CLONE_PATH: $CI_BUILDS_DIR/bitstruct
+  GIT_CLONE_PATH: $CI_BUILDS_DIR/c-modules/bitstruct
+  CMODULES: $CI_BUILDS_DIR/c-modules
 
 fetch-micropython:
   stage: prepare
@@ -31,7 +32,7 @@ mpy-cross:
 unix:
   stage: build
   script:
-    - make -C micropython/ports/unix USER_C_MODULES=$CI_BUILDS_DIR CFLAGS_EXTRA="-DMODULE_BITSTRUCT_ENABLED=1"
+    - make -C micropython/ports/unix USER_C_MODULES=$CMODULES CFLAGS_EXTRA="-DMODULE_BITSTRUCT_ENABLED=1"
   artifacts:
     paths:
       - micropython/ports/unix/micropython
@@ -42,7 +43,7 @@ unix:
 stm32:
   stage: build
   script:
-    - make -C micropython/ports/stm32 USER_C_MODULES=$CI_BUILDS_DIR CFLAGS_EXTRA="-DMODULE_BITSTRUCT_ENABLED=1"
+    - make -C micropython/ports/stm32 USER_C_MODULES=$CMODULES CFLAGS_EXTRA="-DMODULE_BITSTRUCT_ENABLED=1"
   dependencies:
     - mpy-cross
     - fetch-micropython
