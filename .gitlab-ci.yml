@@ -37,6 +37,7 @@ unix:
       - micropython/ports/unix/micropython
   dependencies:
     - mpy-cross
+    - fetch-micropython
 
 stm32:
   stage: build
@@ -44,3 +45,4 @@ stm32:
     - make -C micropython/ports/stm32 USER_C_MODULES=$CI_BUILDS_DIR CFLAGS_EXTRA="-DMODULE_BITSTRUCT_ENABLED=1"
   dependencies:
     - mpy-cross
+    - fetch-micropython
