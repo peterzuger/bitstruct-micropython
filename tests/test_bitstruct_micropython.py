@@ -271,40 +271,44 @@ class BitStructTest(unittest.TestCase):
 
         """
 
-        # # Big endian.
-        # ref = b'\x02\x46\x9a\xfe\x00\x00\x00'
-        # packed = pack('>u19s3f32', 0x1234, -2, -1.0)
-        # self.assertEqual(packed, ref)
-        # unpacked = unpack('>u19s3f32', packed)
-        # self.assertEqual(unpacked, (0x1234, -2, -1.0))
+        # Big endian.
+        ref = b'\x02\x46\x9a\xfe\x00\x00\x00'
+        packed = pack('>u19s3f32', 0x1234, -2, -1.0)
+        self.assertEqual(packed, ref)
+        unpacked = unpack('>u19s3f32', packed)
+        self.assertEqual(unpacked, (0x1234, -2, -1.0))
 
-        # # Little endian.
-        # ref = b'\x2c\x48\x0c\x00\x00\x07\xf4'
-        # packed = pack('<u19s3f32', 0x1234, -2, -1.0)
-        # self.assertEqual(packed, ref)
-        # unpacked = unpack('<u19s3f32', packed)
-        # self.assertEqual(unpacked, (0x1234, -2, -1.0))
+        # Little endian.
+        with self.assertRaises(NotImplementedError) as cm:
+            ref = b'\x2c\x48\x0c\x00\x00\x07\xf4'
+            packed = pack('<u19s3f32', 0x1234, -2, -1.0)
+            self.assertEqual(packed, ref)
+            unpacked = unpack('<u19s3f32', packed)
+            self.assertEqual(unpacked, (0x1234, -2, -1.0))
 
-        # # Mixed endianness.
-        # ref = b'\x00\x00\x2f\x3f\xf0\x00\x00\x00\x00\x00\x00\x80'
-        # packed = pack('>u19<s5>f64r3p4', 1, -2, 1.0, b'\x80')
-        # self.assertEqual(packed, ref)
-        # unpacked = unpack('>u19<s5>f64r3p4', packed)
-        # self.assertEqual(unpacked, (1, -2, 1.0, b'\x80'))
+        # Mixed endianness.
+        with self.assertRaises(NotImplementedError) as cm:
+            ref = b'\x00\x00\x2f\x3f\xf0\x00\x00\x00\x00\x00\x00\x80'
+            packed = pack('>u19<s5>f64r3p4', 1, -2, 1.0, b'\x80')
+            self.assertEqual(packed, ref)
+            unpacked = unpack('>u19<s5>f64r3p4', packed)
+            self.assertEqual(unpacked, (1, -2, 1.0, b'\x80'))
 
-        # # Opposite endianness of the 'mixed endianness' test.
-        # ref = b'\x80\x00\x1e\x00\x00\x00\x00\x00\x00\x0f\xfc\x20'
-        # packed = pack('<u19>s5<f64r3p4', 1, -2, 1.0, b'\x80')
-        # self.assertEqual(packed, ref)
-        # unpacked = unpack('<u19>s5<f64r3p4', packed)
-        # self.assertEqual(unpacked, (1, -2, 1.0, b'\x80'))
+        # Opposite endianness of the 'mixed endianness' test.
+        with self.assertRaises(NotImplementedError) as cm:
+            ref = b'\x80\x00\x1e\x00\x00\x00\x00\x00\x00\x0f\xfc\x20'
+            packed = pack('<u19>s5<f64r3p4', 1, -2, 1.0, b'\x80')
+            self.assertEqual(packed, ref)
+            unpacked = unpack('<u19>s5<f64r3p4', packed)
+            self.assertEqual(unpacked, (1, -2, 1.0, b'\x80'))
 
-        # # Pack as big endian, unpack as little endian.
-        # ref = b'\x40'
-        # packed = pack('u2', 1)
-        # self.assertEqual(packed, ref)
-        # unpacked = unpack('<u2', packed)
-        # self.assertEqual(unpacked, (2, ))
+        # Pack as big endian, unpack as little endian.
+        with self.assertRaises(NotImplementedError) as cm:
+            ref = b'\x40'
+            packed = pack('u2', 1)
+            self.assertEqual(packed, ref)
+            unpacked = unpack('<u2', packed)
+            self.assertEqual(unpacked, (2, ))
 
     def test_byte_order(self):
         """Test pack/unpack with byte order information in the format string.
@@ -318,54 +322,61 @@ class BitStructTest(unittest.TestCase):
         unpacked = unpack('u19s3f32>', packed)
         self.assertEqual(unpacked, (0x1234, -2, -1.0))
 
-        # # Least significant byte first.
-        # ref = b'\x34\x12\x18\x00\x00\xe0\xbc'
-        # packed = pack('u19s3f32<', 0x1234, -2, -1.0)
-        # self.assertEqual(packed, ref)
-        # unpacked = unpack('u19s3f32<', packed)
-        # self.assertEqual(unpacked, (0x1234, -2, -1.0))
+        # Least significant byte first.
+        with self.assertRaises(NotImplementedError) as cm:
+            ref = b'\x34\x12\x18\x00\x00\xe0\xbc'
+            packed = pack('u19s3f32<', 0x1234, -2, -1.0)
+            self.assertEqual(packed, ref)
+            unpacked = unpack('u19s3f32<', packed)
+            self.assertEqual(unpacked, (0x1234, -2, -1.0))
 
         # Least significant byte first.
-        ref = b'\x34\x12'
-        packed = pack('u8s8<', 0x34, 0x12)
-        self.assertEqual(packed, ref)
-        unpacked = unpack('u8s8<', packed)
-        self.assertEqual(unpacked, (0x34, 0x12))
-
-        # # Least significant byte first.
-        # ref = b'\x34\x22'
-        # packed = pack('u3u12<', 1, 0x234)
-        # self.assertEqual(packed, ref)
-        # unpacked = unpack('u3s12<', packed)
-        # self.assertEqual(unpacked, (1, 0x234))
-
-        # # Least significant byte first.
-        # ref = b'\x34\x11\x00'
-        # packed = pack('u3u17<', 1, 0x234)
-        # self.assertEqual(packed, ref)
-        # unpacked = unpack('u3s17<', packed)
-        # self.assertEqual(unpacked, (1, 0x234))
+        with self.assertRaises(NotImplementedError) as cm:
+            ref = b'\x34\x12'
+            packed = pack('u8s8<', 0x34, 0x12)
+            self.assertEqual(packed, ref)
+            unpacked = unpack('u8s8<', packed)
+            self.assertEqual(unpacked, (0x34, 0x12))
 
         # Least significant byte first.
-        ref = b'\x80'
-        packed = pack('u1<', 1)
-        self.assertEqual(packed, ref)
-        unpacked = unpack('u1<', packed)
-        self.assertEqual(unpacked, (1, ))
+        with self.assertRaises(NotImplementedError) as cm:
+            ref = b'\x34\x22'
+            packed = pack('u3u12<', 1, 0x234)
+            self.assertEqual(packed, ref)
+            unpacked = unpack('u3s12<', packed)
+            self.assertEqual(unpacked, (1, 0x234))
 
-        # # Least significant byte first.
-        # ref = b'\x45\x23\x25\x82'
-        # packed = pack('u19u5u1u7<', 0x12345, 5, 1, 2)
-        # self.assertEqual(packed, ref)
-        # unpacked = unpack('u19u5u1u7<', packed)
-        # self.assertEqual(unpacked, (0x12345, 5, 1, 2))
+        # Least significant byte first.
+        with self.assertRaises(NotImplementedError) as cm:
+            ref = b'\x34\x11\x00'
+            packed = pack('u3u17<', 1, 0x234)
+            self.assertEqual(packed, ref)
+            unpacked = unpack('u3s17<', packed)
+            self.assertEqual(unpacked, (1, 0x234))
+
+        # Least significant byte first.
+        with self.assertRaises(NotImplementedError) as cm:
+            ref = b'\x80'
+            packed = pack('u1<', 1)
+            self.assertEqual(packed, ref)
+            unpacked = unpack('u1<', packed)
+            self.assertEqual(unpacked, (1, ))
+
+        # Least significant byte first.
+        with self.assertRaises(NotImplementedError) as cm:
+            ref = b'\x45\x23\x25\x82'
+            packed = pack('u19u5u1u7<', 0x12345, 5, 1, 2)
+            self.assertEqual(packed, ref)
+            unpacked = unpack('u19u5u1u7<', packed)
+            self.assertEqual(unpacked, (0x12345, 5, 1, 2))
 
         # Least significant byte first does not affect raw and text.
-        ref = b'123abc'
-        packed = pack('r24t24<', b'123', 'abc')
-        self.assertEqual(packed, ref)
-        unpacked = unpack('r24t24<', packed)
-        self.assertEqual(unpacked, (b'123', 'abc'))
+        with self.assertRaises(NotImplementedError) as cm:
+            ref = b'123abc'
+            packed = pack('r24t24<', b'123', 'abc')
+            self.assertEqual(packed, ref)
+            unpacked = unpack('r24t24<', packed)
+            self.assertEqual(unpacked, (b'123', 'abc'))
 
     def test_compile(self):
         cf = bitstruct.compile('u1u1s6u7u9')
