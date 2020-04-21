@@ -287,7 +287,7 @@ static void pack_float_32(struct bitstream_writer_t* self_p,
 static mp_obj_t unpack_float_32(struct bitstream_reader_t* self_p,
                                 struct field_info_t* field_info_p){
     // relies on sizeof(float) == 4 this is always the case with gcc
-    uint32_t data = (float)bitstream_reader_read_u32(self_p);
+    uint32_t data = bitstream_reader_read_u32(self_p);
 
     float value;
     memcpy(&value, &data, sizeof(data));
@@ -317,7 +317,7 @@ static void pack_float_64(struct bitstream_writer_t* self_p,
 
 static mp_obj_t unpack_float_64(struct bitstream_reader_t* self_p,
                                 struct field_info_t* field_info_p){
-    uint64_t data = (double)bitstream_reader_read_u64(self_p);
+    uint64_t data = bitstream_reader_read_u64(self_p);
 
     double value;
     memcpy(&value, &data, sizeof(data));
