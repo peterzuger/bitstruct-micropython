@@ -90,7 +90,7 @@ MP_DEFINE_EXCEPTION(Error, Exception);
  */
 static void is_names_list(mp_obj_t names_p){
     if(!mp_obj_is_type(names_p, &mp_type_list))
-        mp_raise_TypeError("Names is not a list.");
+        mp_raise_TypeError(MP_ERROR_TEXT("Names is not a list."));
 }
 
 static inline uint8_t reverse(uint8_t b){
@@ -126,7 +126,7 @@ static void pack_signed_integer(struct bitstream_writer_t* self_p,
         }
     }else if(mp_obj_is_integer(value_p)){
         if(field_info_p->number_of_bits > 64)
-            mp_raise_NotImplementedError("unsigned integer over 64 bits");
+            mp_raise_NotImplementedError(MP_ERROR_TEXT("unsigned integer over 64 bits"));
 
         // raises TypeError
         int64_t value = mp_obj_get_int(value_p);
@@ -136,7 +136,8 @@ static void pack_signed_integer(struct bitstream_writer_t* self_p,
         int64_t upper = (limit - 1);
 
         if((value < lower) || (value > upper))
-            nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error, "\"s%d\" requires %d <= integer <= %d (got %d)",
+            nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error,
+                                                    MP_ERROR_TEXT("\"s%d\" requires %d <= integer <= %d (got %d)"),
                                                     field_info_p->number_of_bits,
                                                     lower,
                                                     upper,
@@ -151,14 +152,15 @@ static void pack_signed_integer(struct bitstream_writer_t* self_p,
                                         field_info_p->number_of_bits);
     }else{
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
-                                                "can't convert %s to int", mp_obj_get_type_str(value_p)));
+                                                MP_ERROR_TEXT("can't convert %s to int"),
+                                                mp_obj_get_type_str(value_p)));
     }
 }
 
 static mp_obj_t unpack_signed_integer(struct bitstream_reader_t* self_p,
                                       struct field_info_t* field_info_p){
     if(field_info_p->number_of_bits > 64)
-        mp_raise_NotImplementedError("signed integer over 64 bits");
+        mp_raise_NotImplementedError(MP_ERROR_TEXT("signed integer over 64 bits"));
 
     uint64_t value = bitstream_reader_read_u64_bits(self_p, field_info_p->number_of_bits);
     uint64_t sign_bit = (1ull << (field_info_p->number_of_bits - 1));
@@ -193,7 +195,7 @@ static void pack_unsigned_integer(struct bitstream_writer_t* self_p,
         }
     }else if(mp_obj_is_integer(value_p)){
         if(field_info_p->number_of_bits > 64)
-            mp_raise_NotImplementedError("unsigned integer over 64 bits");
+            mp_raise_NotImplementedError(MP_ERROR_TEXT("unsigned integer over 64 bits"));
 
         // raises TypeError
         uint64_t value = mp_obj_get_int(value_p);
@@ -206,7 +208,8 @@ static void pack_unsigned_integer(struct bitstream_writer_t* self_p,
 
         // TODO: implement output of large integers
         if(value > upper)
-            nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error, "\"u%d\" requires 0 <= integer <= %d (got %d)",
+            nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error,
+                                                    MP_ERROR_TEXT("\"u%d\" requires 0 <= integer <= %d (got %d)"),
                                                     field_info_p->number_of_bits,
                                                     upper,
                                                     value));
@@ -217,14 +220,15 @@ static void pack_unsigned_integer(struct bitstream_writer_t* self_p,
 
     }else{
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
-                                                "can't convert %s to int", mp_obj_get_type_str(value_p)));
+                                                MP_ERROR_TEXT("can't convert %s to int"),
+                                                mp_obj_get_type_str(value_p)));
     }
 }
 
 static mp_obj_t unpack_unsigned_integer(struct bitstream_reader_t* self_p,
                                         struct field_info_t* field_info_p){
     if(field_info_p->number_of_bits > 64)
-        mp_raise_NotImplementedError("unsigned integer over 64 bits");
+        mp_raise_NotImplementedError(MP_ERROR_TEXT("unsigned integer over 64 bits"));
 
     uint64_t value = bitstream_reader_read_u64_bits(self_p,
                                                     field_info_p->number_of_bits);
@@ -248,7 +252,8 @@ static void pack_float_16(struct bitstream_writer_t* self_p,
         bitstream_writer_write_u16(self_p, data);
     }else{
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
-                                                "can't convert %s to float", mp_obj_get_type_str(value_p)));
+                                                MP_ERROR_TEXT("can't convert %s to float"),
+                                                mp_obj_get_type_str(value_p)));
     }
 }
 
@@ -280,7 +285,7 @@ static void pack_float_32(struct bitstream_writer_t* self_p,
         bitstream_writer_write_u32(self_p, data);
     }else{
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
-                                                "can't convert %s to float", mp_obj_get_type_str(value_p)));
+                                                MP_ERROR_TEXT("can't convert %s to float"), mp_obj_get_type_str(value_p)));
     }
 }
 
@@ -311,7 +316,8 @@ static void pack_float_64(struct bitstream_writer_t* self_p,
         bitstream_writer_write_u64(self_p, data);
     }else{
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError,
-                                                "can't convert %s to float", mp_obj_get_type_str(value_p)));
+                                                MP_ERROR_TEXT("can't convert %s to float"),
+                                                mp_obj_get_type_str(value_p)));
     }
 }
 
@@ -497,7 +503,7 @@ static void field_info_init_float(struct field_info_t* self_p,
 
     default:
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error,
-                                                "expected float size of 16, 32, or 64 bits (got %d)",
+                                                MP_ERROR_TEXT("expected float size of 16, 32, or 64 bits (got %d)"),
                                                 (uint)number_of_bits));
     }
 }
@@ -514,7 +520,7 @@ static void field_info_init_text(struct field_info_t* self_p,
     self_p->unpack = unpack_text;
 
     if((number_of_bits % 8) != 0){
-        mp_raise_NotImplementedError("Text not multiple of 8 bits.");
+        mp_raise_NotImplementedError(MP_ERROR_TEXT("Text not multiple of 8 bits."));
     }
 }
 
@@ -585,7 +591,7 @@ static void field_info_init(struct field_info_t* self_p,
 
     default:
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error,
-                                                "bad char '%c' in format",
+                                                MP_ERROR_TEXT("bad char '%c' in format"),
                                                 (uint)kind));
         break;
     }
@@ -628,7 +634,7 @@ const char* parse_field(const char* format_p,
 
     switch(*format_p){
     case '<':
-        mp_raise_NotImplementedError("bitorder little endian first in format");
+        mp_raise_NotImplementedError(MP_ERROR_TEXT("bitorder little endian first in format"));
         *bitorder = BITORDER_LSBFIRST;
         format_p++;
         break;
@@ -646,7 +652,7 @@ const char* parse_field(const char* format_p,
 
     while(isdigit(*format_p)){
         if(*number_of_bits_p > (INT_MAX / 100)){
-            mp_raise_ValueError("Field too long.");
+            mp_raise_ValueError(MP_ERROR_TEXT("Field too long."));
         }
 
         *number_of_bits_p *= 10;
@@ -656,7 +662,7 @@ const char* parse_field(const char* format_p,
 
     if(*number_of_bits_p == 0){
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error,
-                                                "bad format '%s'",
+                                                MP_ERROR_TEXT("bad format '%s'"),
                                                 tmp_format));
     }
 
@@ -695,7 +701,7 @@ static struct info_t* parse_format(mp_obj_t format_obj_p){
 
     switch(*format_p){
     case '<':
-        mp_raise_NotImplementedError("byteorder LSB first in format");
+        mp_raise_NotImplementedError(MP_ERROR_TEXT("byteorder LSB first in format"));
         info_p->byteorder = BYTEORDER_LSBFIRST;
         break;
     case '>':
@@ -749,7 +755,7 @@ static mp_obj_t pack(struct info_t* info_p,
                      size_t number_of_args){
     if(number_of_args < info_p->number_of_non_padding_fields){
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error,
-                                                "pack expected %d item(s) for packing (got %d)",
+                                                MP_ERROR_TEXT("pack expected %d item(s) for packing (got %d)"),
                                                 (uint)info_p->number_of_non_padding_fields,
                                                 (uint)number_of_args));
     }
@@ -797,7 +803,7 @@ static mp_obj_t unpack(struct info_t* info_p, mp_obj_t data_p, long offset){
 
     if(size < ((info_p->number_of_bits + offset + 7) / 8)){
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error,
-                                                "unpack requires at least %d bits to unpack (got %d)",
+                                                MP_ERROR_TEXT("unpack requires at least %d bits to unpack (got %d)"),
                                                 (uint)(info_p->number_of_bits),
                                                 (uint)(size * 8) - offset));
     }
@@ -836,11 +842,11 @@ static long parse_offset(mp_obj_t offset_p){
     unsigned long offset = mp_obj_get_int(offset_p);
 
     if(offset == (unsigned long)-1){
-        mp_raise_ValueError("negative offset");
+        mp_raise_ValueError(MP_ERROR_TEXT("negative offset"));
     }
 
     if(offset > 0x7fffffff){
-        mp_raise_ValueError("Offset must be less or equal to 2147483647 bits.");
+        mp_raise_ValueError(MP_ERROR_TEXT("Offset must be less or equal to 2147483647 bits."));
     }
 
     return offset;
@@ -855,7 +861,7 @@ static void pack_into_prepare(struct info_t* info_p,
     long offset = parse_offset(offset_p);
 
     if(!mp_obj_is_type(buf_p, &mp_type_bytearray)){
-        mp_raise_TypeError("Bytearray needed.");
+        mp_raise_TypeError(MP_ERROR_TEXT("Bytearray needed."));
     }
 
     uint8_t* packed_p = ((mp_obj_array_t*)buf_p)->items;
@@ -863,7 +869,7 @@ static void pack_into_prepare(struct info_t* info_p,
 
     if(size < ((info_p->number_of_bits + offset + 7) / 8))
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error,
-                                                "pack_into requires a buffer of at least %d bits",
+                                                MP_ERROR_TEXT("pack_into requires a buffer of at least %d bits"),
                                                 (uint)info_p->number_of_bits));
 
     bitstream_writer_init(writer_p, packed_p);
@@ -892,7 +898,7 @@ static mp_obj_t pack_into(struct info_t* info_p,
 
     if((number_of_args - consumed_args) < info_p->number_of_non_padding_fields)
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error,
-                                                "pack expected %d item(s) for packing (got %d)",
+                                                MP_ERROR_TEXT("pack expected %d item(s) for packing (got %d)"),
                                                 (uint)info_p->number_of_non_padding_fields,
                                                 (uint)(number_of_args - consumed_args)));
 
@@ -936,13 +942,13 @@ static void pack_dict_pack(struct info_t* info_p,
             mp_map_elem_t *elem = mp_map_lookup(&self->map, items[consumed_args], MP_MAP_LOOKUP);
             if(elem == NULL)
                 nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error,
-                                                        "'%s' not found in data dictionary",
+                                                        MP_ERROR_TEXT("'%s' not found in data dictionary"),
                                                         mp_obj_str_get_str(items[consumed_args])));
             value_p = elem->value;
             consumed_args++;
 
             if(value_p == mp_const_none){
-                mp_raise_msg(&mp_type_Error, "Missing value.");
+                mp_raise_msg(&mp_type_Error, MP_ERROR_TEXT("Missing value."));
             }
         }
 
@@ -957,7 +963,7 @@ static mp_obj_t pack_dict(struct info_t* info_p,
     struct bitstream_writer_t writer;
 
     if(((mp_obj_list_t*)MP_OBJ_TO_PTR(names_p))->len < info_p->number_of_non_padding_fields){
-        mp_raise_ValueError("Too few names.");
+        mp_raise_ValueError(MP_ERROR_TEXT("Too few names."));
     }
 
     // raises MemoryError
@@ -978,7 +984,7 @@ static mp_obj_t unpack_dict(struct info_t* info_p,
                             mp_obj_t data_p,
                             long offset){
     if(((mp_obj_list_t*)MP_OBJ_TO_PTR(names_p))->len < info_p->number_of_non_padding_fields){
-        mp_raise_ValueError("Too few names.");
+        mp_raise_ValueError(MP_ERROR_TEXT("Too few names."));
     }
 
     // raises MemoryError
@@ -989,7 +995,7 @@ static mp_obj_t unpack_dict(struct info_t* info_p,
     bool must_free = bitstruct_mp_obj_get_data(data_p, &size, &packed_p);
 
     if(size < ((info_p->number_of_bits + offset + 7) / 8)){
-        mp_raise_ValueError("Short data.");
+        mp_raise_ValueError(MP_ERROR_TEXT("Short data."));
     }
 
     struct bitstream_reader_t reader;
@@ -1680,7 +1686,7 @@ STATIC mp_obj_t bitstruct_byteswap(size_t n_args, const mp_obj_t* args){
             break;
 
         default:
-            mp_raise_ValueError("Expected 1, 2, 4 or 8, but got c.");
+            mp_raise_ValueError(MP_ERROR_TEXT("Expected 1, 2, 4 or 8, but got c."));
             return mp_const_none;
         }
 
@@ -1692,7 +1698,7 @@ STATIC mp_obj_t bitstruct_byteswap(size_t n_args, const mp_obj_t* args){
     return (swapped_p);
 
 out1:
-    mp_raise_ValueError("Out of data to swap.");
+    mp_raise_ValueError(MP_ERROR_TEXT("Out of data to swap."));
     return mp_const_none;
 }
 
