@@ -1071,7 +1071,7 @@ static mp_obj_t fill_pading_from_kwarg(mp_map_t* kw_args){
                      MP_ARRAY_SIZE(allowed_args), allowed_args, (mp_arg_val_t*)&args);
 
     if(!args.fill_padding.u_bool)
-        mp_raise_NotImplementedError("fill_padding=False");
+        mp_raise_NotImplementedError(MP_ERROR_TEXT("fill_padding=False"));
 
     return mp_obj_new_bool(args.fill_padding.u_bool);
 }
