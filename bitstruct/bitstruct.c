@@ -111,9 +111,9 @@ static void pack_signed_integer(struct bitstream_writer_t* self_p,
         int sign = ((mp_obj_int_t*)value_p)->mpz.neg;
 
         if(!field_info_p->bitorder){
-            for(size_t i = 0; i < (field_info_p->number_of_bits / 8); ++i)
+            for(int i = 0; i < (field_info_p->number_of_bits / 8); ++i)
                 bitstream_writer_write_u8(self_p, reverse(buffer[i]));
-            for(size_t i = 0; i < (field_info_p->number_of_bits % 8); ++i)
+            for(int i = 0; i < (field_info_p->number_of_bits % 8); ++i)
                 bitstream_writer_write_bit(self_p, buffer[size - 1] >> i);
             bitstream_writer_write_bit(self_p, sign);
         }else{
@@ -182,9 +182,9 @@ static void pack_unsigned_integer(struct bitstream_writer_t* self_p,
         mp_obj_int_to_bytes_impl(value_p, field_info_p->bitorder, size, buffer);
 
         if(!field_info_p->bitorder){
-            for(size_t i = 0; i < (field_info_p->number_of_bits / 8); ++i)
+            for(int i = 0; i < (field_info_p->number_of_bits / 8); ++i)
                 bitstream_writer_write_u8(self_p, reverse(buffer[i]));
-            for(size_t i = 0; i < (field_info_p->number_of_bits % 8); ++i)
+            for(int i = 0; i < (field_info_p->number_of_bits % 8); ++i)
                 bitstream_writer_write_bit(self_p, buffer[size - 1] >> i);
         }else{
             if(field_info_p->number_of_bits % 8){
@@ -344,7 +344,7 @@ static void pack_bool(struct bitstream_writer_t* self_p,
 static mp_obj_t unpack_bool(struct bitstream_reader_t* self_p,
                             struct field_info_t* field_info_p){
     bool val = false;
-    for(size_t i = 0; i < field_info_p->number_of_bits; ++i){
+    for(int i = 0; i < field_info_p->number_of_bits; ++i){
         val |= bitstream_reader_read_bit(self_p);
     }
     return val ? mp_const_true : mp_const_false;
@@ -408,7 +408,7 @@ static void pack_raw(struct bitstream_writer_t* self_p,
 
     if(field_info_p->number_of_bits % 8){
         uint8_t tmp = 0;
-        if(((field_info_p->number_of_bits + 7) / 8) <= size)
+        if((size_t)((field_info_p->number_of_bits + 7) / 8) <= size)
             tmp = buf_p[required_bytes];
 
         bitstream_writer_write_u64_bits(self_p,
@@ -753,7 +753,7 @@ static mp_obj_t pack(struct info_t* info_p,
                      const mp_obj_t* args_p,
                      int consumed_args,
                      size_t number_of_args){
-    if(number_of_args < info_p->number_of_non_padding_fields){
+    if(number_of_args < (size_t)info_p->number_of_non_padding_fields){
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error,
                                                 MP_ERROR_TEXT("pack expected %d item(s) for packing (got %d)"),
                                                 (uint)info_p->number_of_non_padding_fields,
@@ -801,7 +801,7 @@ static mp_obj_t unpack(struct info_t* info_p, mp_obj_t data_p, long offset){
     char* packed_p;
     bool must_free = bitstruct_mp_obj_get_data(data_p, &size, &packed_p);
 
-    if(size < ((info_p->number_of_bits + offset + 7) / 8)){
+    if(size < (size_t)((info_p->number_of_bits + offset + 7) / 8)){
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error,
                                                 MP_ERROR_TEXT("unpack requires at least %d bits to unpack (got %d)"),
                                                 (uint)(info_p->number_of_bits),
@@ -867,7 +867,7 @@ static void pack_into_prepare(struct info_t* info_p,
     uint8_t* packed_p = ((mp_obj_array_t*)buf_p)->items;
     size_t size = ((mp_obj_array_t*)buf_p)->len;
 
-    if(size < ((info_p->number_of_bits + offset + 7) / 8))
+    if(size < (size_t)((info_p->number_of_bits + offset + 7) / 8))
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error,
                                                 MP_ERROR_TEXT("pack_into requires a buffer of at least %d bits"),
                                                 (uint)info_p->number_of_bits));
@@ -896,7 +896,7 @@ static mp_obj_t pack_into(struct info_t* info_p,
     struct bitstream_writer_t writer;
     struct bitstream_writer_bounds_t bounds;
 
-    if((number_of_args - consumed_args) < info_p->number_of_non_padding_fields)
+    if((size_t)(number_of_args - consumed_args) < (size_t)info_p->number_of_non_padding_fields)
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error,
                                                 MP_ERROR_TEXT("pack expected %d item(s) for packing (got %d)"),
                                                 (uint)info_p->number_of_non_padding_fields,
@@ -962,7 +962,7 @@ static mp_obj_t pack_dict(struct info_t* info_p,
                           mp_obj_t data_p){
     struct bitstream_writer_t writer;
 
-    if(((mp_obj_list_t*)MP_OBJ_TO_PTR(names_p))->len < info_p->number_of_non_padding_fields){
+    if(((mp_obj_list_t*)MP_OBJ_TO_PTR(names_p))->len < (size_t)info_p->number_of_non_padding_fields){
         mp_raise_ValueError(MP_ERROR_TEXT("Too few names."));
     }
 
@@ -983,7 +983,7 @@ static mp_obj_t unpack_dict(struct info_t* info_p,
                             mp_obj_t names_p,
                             mp_obj_t data_p,
                             long offset){
-    if(((mp_obj_list_t*)MP_OBJ_TO_PTR(names_p))->len < info_p->number_of_non_padding_fields){
+    if(((mp_obj_list_t*)MP_OBJ_TO_PTR(names_p))->len < (size_t)info_p->number_of_non_padding_fields){
         mp_raise_ValueError(MP_ERROR_TEXT("Too few names."));
     }
 
@@ -994,7 +994,7 @@ static mp_obj_t unpack_dict(struct info_t* info_p,
     char* packed_p;
     bool must_free = bitstruct_mp_obj_get_data(data_p, &size, &packed_p);
 
-    if(size < ((info_p->number_of_bits + offset + 7) / 8)){
+    if(size < (size_t)((info_p->number_of_bits + offset + 7) / 8)){
         mp_raise_ValueError(MP_ERROR_TEXT("Short data."));
     }
 
