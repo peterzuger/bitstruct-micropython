@@ -1686,7 +1686,10 @@ STATIC mp_obj_t bitstruct_byteswap(size_t n_args, const mp_obj_t* args){
             break;
 
         default:
-            mp_raise_ValueError(MP_ERROR_TEXT("Expected 1, 2, 4 or 8, but got c."));
+            nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error,
+                                                    MP_ERROR_TEXT("Expected 1, 2, 4 or 8, but got %c."),
+                                                    *c_format_p));
+
             return mp_const_none;
         }
 
