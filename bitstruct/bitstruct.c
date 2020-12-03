@@ -88,9 +88,32 @@ MP_DEFINE_EXCEPTION(Error, Exception);
 /**
  * @raises TypeError
  */
-static void is_names_list(mp_obj_t names_p){
-    if(!mp_obj_is_type(names_p, &mp_type_list))
-        mp_raise_TypeError(MP_ERROR_TEXT("Names is not a list."));
+static void is_names_compatible(mp_obj_t names_p){
+    if((!mp_obj_is_type(names_p, &mp_type_list)) && (!mp_obj_is_type(names_p, &mp_type_list)))
+        mp_raise_TypeError(MP_ERROR_TEXT("Names is not a list or tuple."));
+}
+
+static void names_get(mp_obj_t self_in, size_t *len, mp_obj_t **items){
+    if(mp_obj_is_type(self_in, &mp_type_list))
+        mp_obj_list_get(self_in, len, items);
+    else if(mp_obj_is_type(self_in, &mp_type_tuple))
+        mp_obj_tuple_get(self_in, len, items);
+}
+
+/**
+ * @raises TypeError
+ */
+static size_t names_get_length(mp_obj_t self_in){
+    if(mp_obj_is_type(self_in, &mp_type_list)){
+        return ((mp_obj_list_t*)MP_OBJ_TO_PTR(self_in))->len;
+    }else if(mp_obj_is_type(self_in, &mp_type_tuple)){
+        return ((mp_obj_tuple_t*)MP_OBJ_TO_PTR(self_in))->len;
+    }
+
+    // raises TypeError
+    mp_raise_TypeError(MP_ERROR_TEXT("Names is not a list or tuple."));
+
+    return 0;
 }
 
 static inline uint8_t reverse(uint8_t b){
@@ -928,7 +951,8 @@ static void pack_dict_pack(struct info_t* info_p,
                            mp_obj_t fill_padding){
     size_t len;
     mp_obj_t* items;
-    mp_obj_list_get(names_p, &len, &items);
+
+    names_get(names_p, &len, &items);
 
     int consumed_args = 0;
     for(int i = 0; i < info_p->number_of_fields; i++){
@@ -962,7 +986,7 @@ static mp_obj_t pack_dict(struct info_t* info_p,
                           mp_obj_t data_p){
     struct bitstream_writer_t writer;
 
-    if(((mp_obj_list_t*)MP_OBJ_TO_PTR(names_p))->len < (size_t)info_p->number_of_non_padding_fields){
+    if(names_get_length(names_p) < (size_t)info_p->number_of_non_padding_fields){
         mp_raise_ValueError(MP_ERROR_TEXT("Too few names."));
     }
 
@@ -983,7 +1007,7 @@ static mp_obj_t unpack_dict(struct info_t* info_p,
                             mp_obj_t names_p,
                             mp_obj_t data_p,
                             long offset){
-    if(((mp_obj_list_t*)MP_OBJ_TO_PTR(names_p))->len < (size_t)info_p->number_of_non_padding_fields){
+    if(names_get_length(names_p) < (size_t)info_p->number_of_non_padding_fields){
         mp_raise_ValueError(MP_ERROR_TEXT("Too few names."));
     }
 
@@ -1004,7 +1028,8 @@ static mp_obj_t unpack_dict(struct info_t* info_p,
 
     size_t len;
     mp_obj_t* names;
-    mp_obj_list_get(names_p, &len, &names);
+
+    names_get(names_p, &len, &names);
 
     int produced_args = 0;
     for(int i = 0; i < info_p->number_of_fields; i++){
@@ -1315,7 +1340,7 @@ mp_obj_t bitstruct_CompiledFormatDict_make_new(const mp_obj_type_t* type,
     self->names_p = mp_const_none;
     if((n_args == 2) && (args[1] != mp_const_none)){
         // raises TypeError
-        is_names_list(args[1]);
+        is_names_compatible(args[1]);
         self->names_p = args[1];
     }
 
@@ -1343,7 +1368,8 @@ STATIC void bitstruct_CompiledFormatDict_print(const mp_print_t* print,
     }else{
         size_t len;
         mp_obj_t* items;
-        mp_obj_list_get(self->names_p, &len, &items);
+
+        names_get(self->names_p, &len, &items);
 
         mp_print_str(print, "[");
         if(len){
@@ -1517,7 +1543,7 @@ STATIC mp_obj_t bitstruct_pack_dict(mp_obj_t format, mp_obj_t names, mp_obj_t da
     struct info_t* info_p = parse_format(format);
 
     // raises TypeError
-    is_names_list(names);
+    is_names_compatible(names);
 
     // raises KeyError, MemoryError, NotImplementedError, OverflowError, ValueError
     mp_obj_t packed_p = pack_dict(info_p, names, data);
@@ -1537,7 +1563,7 @@ STATIC mp_obj_t bitstruct_unpack_dict(mp_obj_t format, mp_obj_t names, mp_obj_t 
     struct info_t* info_p = parse_format(format);
 
     // raises TypeError
-    is_names_list(names);
+    is_names_compatible(names);
 
     // raises MemoryError, OverflowError, TypeError, ValueError
     mp_obj_t unpacked_p = unpack_dict(info_p, names, data, 0);
@@ -1562,7 +1588,7 @@ STATIC mp_obj_t bitstruct_pack_into_dict(size_t n_args, const mp_obj_t* pos_args
     struct info_t* info_p = parse_format(pos_args[0]);
 
     // raises TypeError
-    is_names_list(pos_args[1]);
+    is_names_compatible(pos_args[1]);
 
     // raises KeyError, NotImplementedError, OverflowError, TypeError
     mp_obj_t res_p = pack_into_dict(info_p, pos_args[1], pos_args[2], pos_args[3], pos_args[4], fill_padding);
@@ -1589,7 +1615,7 @@ STATIC mp_obj_t bitstruct_unpack_from_dict(size_t n_args, const mp_obj_t* args){
     struct info_t* info_p = parse_format(args[0]);
 
     // raises TypeError
-    is_names_list(args[1]);
+    is_names_compatible(args[1]);
 
     // raises MemoryError, OverflowError, TypeError, ValueError
     mp_obj_t unpacked_p = unpack_from_dict(info_p, args[1], args[2], offset);
