@@ -89,7 +89,7 @@ MP_DEFINE_EXCEPTION(Error, Exception);
  * @raises TypeError
  */
 static void is_names_compatible(mp_obj_t names_p){
-    if((!mp_obj_is_type(names_p, &mp_type_list)) && (!mp_obj_is_type(names_p, &mp_type_list)))
+    if((!mp_obj_is_type(names_p, &mp_type_list)) && (!mp_obj_is_type(names_p, &mp_type_tuple)))
         mp_raise_TypeError(MP_ERROR_TEXT("Names is not a list or tuple."));
 }
 
