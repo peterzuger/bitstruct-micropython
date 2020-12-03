@@ -640,7 +640,7 @@ class BitStructTest(unittest.TestCase):
         unpacked = unpack('t24', b'1234')[0]
         self.assertEqual(unpacked, '123')
 
-    def test_pack_unpack_dict(self):
+    def test_pack_unpack_dict_names_list(self):
         unpacked = {
             'foo': 0,
             'bar': 0,
@@ -655,7 +655,22 @@ class BitStructTest(unittest.TestCase):
         self.assertEqual(pack_dict(fmt, names, unpacked), packed)
         self.assertEqual(unpack_dict(fmt, names, packed), unpacked)
 
-    def test_pack_into_unpack_from_dict(self):
+    def test_pack_unpack_dict_names_tuple(self):
+        unpacked = {
+            'foo': 0,
+            'bar': 0,
+            'fie': -2,
+            'fum': 65,
+            'fam': 22
+        }
+        packed = b'\x3e\x82\x16'
+        fmt = 'u1u1s6u7u9'
+        names = ('foo', 'bar', 'fie', 'fum', 'fam')
+
+        self.assertEqual(pack_dict(fmt, names, unpacked), packed)
+        self.assertEqual(unpack_dict(fmt, names, packed), unpacked)
+
+    def test_pack_into_unpack_from_dict_names_list(self):
         unpacked = {
             'foo': 0,
             'bar': 0,
@@ -666,6 +681,23 @@ class BitStructTest(unittest.TestCase):
         packed = b'\x3e\x82\x16'
         fmt = 'u1u1s6u7u9'
         names = ['foo', 'bar', 'fie', 'fum', 'fam']
+
+        actual = bytearray(3)
+        pack_into_dict(fmt, names, actual, 0, unpacked)
+        self.assertEqual(actual, packed)
+        self.assertEqual(unpack_from_dict(fmt, names, packed), unpacked)
+
+    def test_pack_into_unpack_from_dict_names_tuple(self):
+        unpacked = {
+            'foo': 0,
+            'bar': 0,
+            'fie': -2,
+            'fum': 65,
+            'fam': 22
+        }
+        packed = b'\x3e\x82\x16'
+        fmt = 'u1u1s6u7u9'
+        names = ('foo', 'bar', 'fie', 'fum', 'fam')
 
         actual = bytearray(3)
         pack_into_dict(fmt, names, actual, 0, unpacked)
