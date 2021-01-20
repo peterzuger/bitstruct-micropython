@@ -41,6 +41,7 @@
 #include "py/objarray.h"
 #include "py/gc.h"
 #include "py/objint.h"
+#include "py/unicode.h"
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -398,6 +399,13 @@ static mp_obj_t unpack_text(struct bitstream_reader_t* self_p,
     uint8_t* buf_p = alloca(number_of_bytes);
 
     bitstream_reader_read_bytes(self_p, buf_p, number_of_bytes);
+
+    #if MICROPY_PY_BUILTINS_STR_UNICODE_CHECK
+    if(!utf8_check(buf_p, number_of_bytes)){
+        // raises UnicodeError
+        mp_raise_msg(&mp_type_UnicodeError, NULL);
+    }
+    #endif
 
     // raises MemoryError
     mp_obj_t value_p = mp_obj_new_str((const char*)buf_p, number_of_bytes);
@@ -845,7 +853,7 @@ static mp_obj_t unpack(struct info_t* info_p, mp_obj_t data_p, long offset){
 
     int produced_args = 0;
     for(int i = 0; i < info_p->number_of_fields; i++){
-        // raises MemoryError, OverflowError
+        // raises MemoryError, OverflowError, UnicodeError
         mp_obj_t value_p = info_p->fields[i].unpack(&reader, &info_p->fields[i]);
 
         if(value_p != mp_const_none){
@@ -940,7 +948,7 @@ static mp_obj_t unpack_from(struct info_t* info_p,
     // raises TypeError, ValueError
     long offset = parse_offset(offset_p);
 
-    // raises MemoryError, OverflowError, TypeError, ValueError
+    // raises MemoryError, OverflowError, TypeError, ValueError, UnicodeError
     return unpack(info_p, data_p, offset);
 }
 
@@ -1033,7 +1041,7 @@ static mp_obj_t unpack_dict(struct info_t* info_p,
 
     int produced_args = 0;
     for(int i = 0; i < info_p->number_of_fields; i++){
-        // raises MemoryError, OverflowError
+        // raises MemoryError, OverflowError, UnicodeError
         mp_obj_t value_p = info_p->fields[i].unpack(&reader, &info_p->fields[i]);
 
         if(value_p != mp_const_none){
@@ -1056,7 +1064,7 @@ static mp_obj_t unpack_from_dict(struct info_t* info_p,
     // raises TypeError, ValueError
     long offset = parse_offset(offset_p);
 
-    // raises MemoryError, OverflowError, TypeError, ValueError
+    // raises MemoryError, OverflowError, TypeError, ValueError, UnicodeError
     return unpack_dict(info_p, names_p, data_p, offset);
 }
 
@@ -1273,7 +1281,7 @@ STATIC mp_obj_t bitstruct_CompiledFormat_pack(size_t n_args, const mp_obj_t* arg
 STATIC mp_obj_t bitstruct_CompiledFormat_unpack(mp_obj_t self_in, mp_obj_t data){
     bitstruct_CompiledFormat_obj_t* self = MP_OBJ_TO_PTR(self_in);
 
-    // raises MemoryError, OverflowError, TypeError, ValueError
+    // raises MemoryError, OverflowError, TypeError, ValueError, UnicodeError
     return unpack(self->info_p, data, 0);
 }
 
@@ -1308,7 +1316,7 @@ STATIC mp_obj_t bitstruct_CompiledFormat_unpack_from(size_t n_args, const mp_obj
     if(n_args == 3)
         offset = args[2];
 
-    // raises MemoryError, OverflowError, TypeError, ValueError
+    // raises MemoryError, OverflowError, TypeError, ValueError, UnicodeError
     return unpack_from(self->info_p, args[1], offset);
 }
 
@@ -1403,7 +1411,7 @@ STATIC mp_obj_t bitstruct_CompiledFormatDict_pack(mp_obj_t self_in, mp_obj_t dat
 STATIC mp_obj_t bitstruct_CompiledFormatDict_unpack(mp_obj_t self_in, mp_obj_t data){
     bitstruct_CompiledFormatDict_obj_t* self = MP_OBJ_TO_PTR(self_in);
 
-    // raises MemoryError, OverflowError, TypeError, ValueError
+    // raises MemoryError, OverflowError, TypeError, ValueError, UnicodeError
     return unpack_dict(self->info_p, self->names_p, data, 0);
 }
 
@@ -1438,7 +1446,7 @@ STATIC mp_obj_t bitstruct_CompiledFormatDict_unpack_from(size_t n_args, const mp
     if(n_args == 3)
         offset = args[2];
 
-    // raises MemoryError, OverflowError, TypeError, ValueError
+    // raises MemoryError, OverflowError, TypeError, ValueError, UnicodeError
     return unpack_from_dict(self->info_p, self->names_p, args[1], offset);
 }
 
@@ -1476,7 +1484,7 @@ STATIC mp_obj_t bitstruct_unpack(mp_obj_t format, mp_obj_t data){
     // raises MemoryError, NotImplementedError, TypeError, ValueError
     struct info_t* info_p = parse_format(format);
 
-    // raises MemoryError, OverflowError, TypeError, ValueError
+    // raises MemoryError, OverflowError, TypeError, ValueError, UnicodeError
     mp_obj_t unpacked_p = unpack(info_p, data, 0);
     gc_free(info_p);
 
@@ -1525,7 +1533,7 @@ STATIC mp_obj_t bitstruct_unpack_from(size_t n_args, const mp_obj_t* args){
     // raises MemoryError, NotImplementedError, TypeError, ValueError
     struct info_t* info_p = parse_format(args[0]);
 
-    // raises MemoryError, OverflowError, TypeError, ValueError
+    // raises MemoryError, OverflowError, TypeError, ValueError, UnicodeError
     mp_obj_t unpacked_p = unpack_from(info_p, args[1], offset);
     gc_free(info_p);
 
@@ -1565,7 +1573,7 @@ STATIC mp_obj_t bitstruct_unpack_dict(mp_obj_t format, mp_obj_t names, mp_obj_t 
     // raises TypeError
     is_names_compatible(names);
 
-    // raises MemoryError, OverflowError, TypeError, ValueError
+    // raises MemoryError, OverflowError, TypeError, ValueError, UnicodeError
     mp_obj_t unpacked_p = unpack_dict(info_p, names, data, 0);
     gc_free(info_p);
 
@@ -1617,7 +1625,7 @@ STATIC mp_obj_t bitstruct_unpack_from_dict(size_t n_args, const mp_obj_t* args){
     // raises TypeError
     is_names_compatible(args[1]);
 
-    // raises MemoryError, OverflowError, TypeError, ValueError
+    // raises MemoryError, OverflowError, TypeError, ValueError, UnicodeError
     mp_obj_t unpacked_p = unpack_from_dict(info_p, args[1], args[2], offset);
     gc_free(info_p);
 
