@@ -640,6 +640,9 @@ class BitStructTest(unittest.TestCase):
         unpacked = unpack('t24', b'1234')[0]
         self.assertEqual(unpacked, '123')
 
+        with self.assertRaises(UnicodeError) as cm:
+            unpack('t24', b'\xffab')
+
     def test_pack_unpack_dict_names_list(self):
         unpacked = {
             'foo': 0,
