@@ -1762,7 +1762,6 @@ STATIC mp_obj_t bitstruct_compile(size_t n_args, const mp_obj_t* args){
 }
 
 
-STATIC const mp_map_elem_t bitstruct_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__),           MP_OBJ_NEW_QSTR(MP_QSTR_bitstruct)            },
     { MP_OBJ_NEW_QSTR(MP_QSTR_pack),               (mp_obj_t)&bitstruct_pack_fun_obj             },
     { MP_OBJ_NEW_QSTR(MP_QSTR_unpack),             (mp_obj_t)&bitstruct_unpack_fun_obj           },
@@ -1779,6 +1778,7 @@ STATIC const mp_map_elem_t bitstruct_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_CompiledFormat),     (mp_obj_t)&bitstruct_CompiledFormat_type      },
     { MP_OBJ_NEW_QSTR(MP_QSTR_CompiledFormatDict), (mp_obj_t)&bitstruct_CompiledFormatDict_type  },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Error),              (mp_obj_t)&mp_type_Error                      },
+STATIC const mp_rom_map_elem_t bitstruct_globals_table[] = {
 };
 
 STATIC MP_DEFINE_CONST_DICT(
