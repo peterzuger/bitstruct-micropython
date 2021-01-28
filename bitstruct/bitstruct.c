@@ -94,11 +94,18 @@ static void is_names_compatible(mp_obj_t names_p){
         mp_raise_TypeError(MP_ERROR_TEXT("Names is not a list or tuple."));
 }
 
+/**
+ * @raises TypeError
+ */
 static void names_get(mp_obj_t self_in, size_t *len, mp_obj_t **items){
-    if(mp_obj_is_type(self_in, &mp_type_list))
+    if(mp_obj_is_type(self_in, &mp_type_list)){
         mp_obj_list_get(self_in, len, items);
-    else if(mp_obj_is_type(self_in, &mp_type_tuple))
+    }else if(mp_obj_is_type(self_in, &mp_type_tuple)){
         mp_obj_tuple_get(self_in, len, items);
+    }else{
+        // raises TypeError
+        mp_raise_TypeError(MP_ERROR_TEXT("Names is not a list or tuple."));
+    }
 }
 
 /**
