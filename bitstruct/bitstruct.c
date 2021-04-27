@@ -1098,6 +1098,10 @@ static mp_obj_t calcsize(struct info_t* info_p){
 }
 
 static mp_obj_t fill_pading_from_kwarg(mp_map_t* kw_args){
+    // avoid mp_arg_parse_all overhead
+    if(!kw_args->used)
+        return mp_const_true;
+
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_fill_padding, MP_ARG_KW_ONLY | MP_ARG_BOOL, {.u_bool = true} },
     };
