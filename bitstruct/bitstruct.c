@@ -34,13 +34,14 @@
 
 #if defined(MODULE_BITSTRUCT_ENABLED) && MODULE_BITSTRUCT_ENABLED == 1
 
-#include "py/obj.h"
-#include "py/runtime.h"
 #include "py/builtin.h"
-#include "py/objstr.h"
-#include "py/objarray.h"
 #include "py/gc.h"
+#include "py/misc.h"
+#include "py/obj.h"
+#include "py/objarray.h"
 #include "py/objint.h"
+#include "py/objstr.h"
+#include "py/runtime.h"
 #include "py/unicode.h"
 
 #include <stdbool.h>
@@ -48,6 +49,10 @@
 #include <string.h>
 
 #include "bitstream.h"
+
+#ifndef MP_ERROR_TEXT
+#define MP_ERROR_TEXT(msg) msg
+#endif /* MP_ERROR_TEXT */
 
 struct field_info_t;
 
