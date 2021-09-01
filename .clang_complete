@@ -1,12 +1,14 @@
+-I/usr/lib/clang/12.0.1/include
 -I/usr/lib/libffi-3.2.1/include
--I../../micropython/lib/mp-readline
+-I../../micropython/shared/readline
 -I../../micropython/lib/berkeley-db-1.xx/PORT/include
 -I../../micropython/lib/axtls/ssl
 -I../../micropython/lib/axtls/crypto
 -I../../micropython/extmod/axtls-include
 -I../../micropython/
 -I../../micropython/ports/unix
--I../../micropython/ports/unix/build
+-I../../micropython/ports/unix/variants/standard
+-I../../micropython/ports/unix/build-standard
 -std=gnu99
 -Wall
 -Wpointer-arith
