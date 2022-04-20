@@ -47,6 +47,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <float.h>
 
 #include "bitstream.h"
 
@@ -273,7 +274,7 @@ static mp_obj_t unpack_unsigned_integer(struct bitstream_reader_t* self_p,
     return mp_obj_new_int_from_ull(value);
 }
 
-#if defined(_Float16)
+#if defined(FLT16_MAX)
 
 static void pack_float_16(struct bitstream_writer_t* self_p,
                           mp_obj_t value_p,
@@ -304,7 +305,7 @@ static mp_obj_t unpack_float_16(struct bitstream_reader_t* self_p,
     return mp_obj_new_float((mp_float_t)value);
 }
 
-#endif /* defined(_Float16) */
+#endif /* defined(FLT16_MAX) */
 
 #if __SIZEOF_FLOAT__ == 4
 
@@ -522,12 +523,12 @@ static void field_info_init_unsigned(struct field_info_t* self_p,
 static void field_info_init_float(struct field_info_t* self_p,
                                   int number_of_bits){
     switch(number_of_bits){
-#if defined(_Float16)
+#if defined(FLT16_MAX)
     case 16:
         self_p->pack = pack_float_16;
         self_p->unpack = unpack_float_16;
         break;
-#endif /* defined(_Float16) */
+#endif /* defined(FLT16_MAX) */
 
 #if __SIZEOF_FLOAT__ == 4
     case 32:
@@ -545,7 +546,11 @@ static void field_info_init_float(struct field_info_t* self_p,
 
     default:
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_Error,
-                                                MP_ERROR_TEXT("expected float size of 16, 32, or 64 bits (got %d)"),
+                                                MP_ERROR_TEXT("expected float size of "
+#if defined(FLT16_MAX)
+                                                              "16, "
+#endif /* defined(FLT16_MAX) */
+                                                              "32, or 64 bits (got %d)"),
                                                 (uint)number_of_bits));
     }
 }
