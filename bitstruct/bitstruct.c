@@ -280,7 +280,6 @@ static void pack_float_16(struct bitstream_writer_t* self_p,
                           mp_obj_t value_p,
                           struct field_info_t* field_info_p){
     if(mp_obj_is_float(value_p)){
-        // relies on sizeof(float) == 4 this is always the case with gcc
         // raises TypeError
         _Float16 value = (_Float16)mp_obj_get_float(value_p);
 
@@ -296,8 +295,7 @@ static void pack_float_16(struct bitstream_writer_t* self_p,
 
 static mp_obj_t unpack_float_16(struct bitstream_reader_t* self_p,
                                 struct field_info_t* field_info_p){
-    // relies on sizeof(float) == 4 this is always the case with gcc
-    uint16_t data = (_Float16)bitstream_reader_read_u16(self_p);
+    uint16_t data = bitstream_reader_read_u16(self_p);
 
     _Float16 value;
     memcpy(&value, &data, sizeof(data));
