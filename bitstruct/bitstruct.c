@@ -1750,13 +1750,13 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(bitstruct_byteswap_fun_obj, 2, 3, bit
  * @param opt: names = None
  */
 STATIC mp_obj_t bitstruct_compile(size_t n_args, const mp_obj_t* args){
-    if(n_args == 1){
+    if((n_args == 2) && (args[1] != mp_const_none)){
         // raises MemoryError, NotImplementedError, TypeError, ValueError
-        return bitstruct_CompiledFormat_make_new(&mp_type_NoneType, n_args, 0, args);
+        return bitstruct_CompiledFormatDict_make_new(&mp_type_NoneType, n_args, 0, args);
     }
 
     // raises MemoryError, NotImplementedError, TypeError, ValueError
-    return bitstruct_CompiledFormatDict_make_new(&mp_type_NoneType, n_args, 0, args);
+    return bitstruct_CompiledFormat_make_new(&mp_type_NoneType, 1, 0, args);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(bitstruct_compile_fun_obj, 1, 2, bitstruct_compile);
 
