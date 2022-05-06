@@ -548,7 +548,7 @@ static void field_info_init_float(struct field_info_t* self_p,
 #if defined(FLT16_MAX)
                                                               "16, "
 #endif /* defined(FLT16_MAX) */
-                                                              "32, or 64 bits (got %d)"),
+                                                              "32 or 64 bits (got %d)"),
                                                 (uint)number_of_bits));
     }
 }
