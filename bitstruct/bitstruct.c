@@ -1790,6 +1790,6 @@ const mp_obj_module_t mp_module_bitstruct = {
     .globals = (mp_obj_dict_t*)&mp_module_bitstruct_globals,
 };
 
-MP_REGISTER_MODULE(MP_QSTR_bitstruct, mp_module_bitstruct, MODULE_BITSTRUCT_ENABLED);
+MP_REGISTER_MODULE(MP_QSTR_bitstruct, mp_module_bitstruct);
 
 #endif /* defined(MODULE_BITSTRUCT_ENABLED) && MODULE_BITSTRUCT_ENABLED == 1 */
