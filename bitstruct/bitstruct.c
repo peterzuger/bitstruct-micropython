@@ -140,7 +140,7 @@ static inline uint8_t reverse(uint8_t b){
 static void pack_signed_integer(struct bitstream_writer_t* self_p,
                                 mp_obj_t value_p,
                                 struct field_info_t* field_info_p){
-    if(mp_obj_is_type(value_p, &mp_type_int)){
+    if(mp_obj_is_exact_type(value_p, &mp_type_int)){
         field_info_p->number_of_bits--;
         size_t size = (field_info_p->number_of_bits + 7) / 8;
         uint8_t* buffer = alloca(size);
@@ -213,7 +213,7 @@ static mp_obj_t unpack_signed_integer(struct bitstream_reader_t* self_p,
 static void pack_unsigned_integer(struct bitstream_writer_t* self_p,
                                   mp_obj_t value_p,
                                   struct field_info_t* field_info_p){
-    if(mp_obj_is_type(value_p, &mp_type_int)){
+    if(mp_obj_is_exact_type(value_p, &mp_type_int)){
         size_t size = (field_info_p->number_of_bits + 7) / 8;
         uint8_t* buffer = alloca(size);
         mp_obj_int_to_bytes_impl(value_p, field_info_p->bitorder, size, buffer);
