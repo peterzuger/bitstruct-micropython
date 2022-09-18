@@ -410,14 +410,7 @@ static mp_obj_t unpack_text(struct bitstream_reader_t* self_p,
 
     bitstream_reader_read_bytes(self_p, buf_p, number_of_bytes);
 
-    #if MICROPY_PY_BUILTINS_STR_UNICODE_CHECK
-    if(!utf8_check(buf_p, number_of_bytes)){
-        // raises UnicodeError
-        mp_raise_msg(&mp_type_UnicodeError, NULL);
-    }
-    #endif
-
-    // raises MemoryError
+    // raises MemoryError, UnicodeError
     mp_obj_t value_p = mp_obj_new_str((const char*)buf_p, number_of_bytes);
 
     return value_p;
