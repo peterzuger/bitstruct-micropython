@@ -184,8 +184,11 @@ class BitStructTest(unittest.TestCase):
         with self.assertRaises(Error) as cm:
             unpack('f33', b'\x00\x00\x00\x00\x00')
 
-        self.assertEqual(str(cm.exception),
-                         'expected float size of 32 or 64 bits (got 33)')
+        expected = 'expected float size of 32 or 64 bits (got 33)'
+        if '16' in str(cm.exception):
+            expected = 'expected float size of 16, 32 or 64 bits (got 33)'
+
+        self.assertEqual(str(cm.exception), expected)
 
         # Too many bits to unpack.
         with self.assertRaises(Error) as cm:
@@ -438,14 +441,17 @@ class BitStructTest(unittest.TestCase):
         with self.assertRaises(Error) as cm:
             pack('f31', 1.0)
 
-        self.assertEqual(str(cm.exception),
-                         'expected float size of 32 or 64 bits (got 31)')
+
+        expected = 'expected float size of 32 or 64 bits (got {})'
+        if '16' in str(cm.exception):
+            expected = 'expected float size of 16, 32 or 64 bits (got {})'
+
+        self.assertEqual(str(cm.exception), expected.format(31))
 
         with self.assertRaises(Error) as cm:
             unpack('f33', 8 * b'\x00')
 
-        self.assertEqual(str(cm.exception),
-                         'expected float size of 32 or 64 bits (got 33)')
+        self.assertEqual(str(cm.exception), expected.format(33))
 
     def test_bad_format(self):
         """Test of bad format.
