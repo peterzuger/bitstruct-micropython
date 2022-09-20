@@ -1185,33 +1185,23 @@ STATIC const mp_rom_map_elem_t bitstruct_CompiledFormatDict_locals_dict_table[] 
 };
 STATIC MP_DEFINE_CONST_DICT(bitstruct_CompiledFormatDict_locals_dict,bitstruct_CompiledFormatDict_locals_dict_table);
 
+MP_DEFINE_CONST_OBJ_TYPE(
+    bitstruct_CompiledFormat_type,
+    MP_QSTR_CompiledFormat,
+    MP_TYPE_FLAG_NONE,
+    print, bitstruct_CompiledFormat_print,
+    make_new, bitstruct_CompiledFormat_make_new,
+    locals_dict, &bitstruct_CompiledFormat_locals_dict
+    );
 
-const mp_obj_type_t bitstruct_CompiledFormat_type = {
-    // "inherit" the type "type"
-    { &mp_type_type },
-    // give it a name
-    .name = MP_QSTR_CompiledFormat,
-    // give it a print-function
-    .print = bitstruct_CompiledFormat_print,
-    // give it a constructor
-    .make_new = bitstruct_CompiledFormat_make_new,
-    // and the global members
-    .locals_dict = (mp_obj_dict_t*)&bitstruct_CompiledFormat_locals_dict,
-};
-
-
-const mp_obj_type_t bitstruct_CompiledFormatDict_type = {
-    // "inherit" the type "type"
-    { &mp_type_type },
-    // give it a name
-    .name = MP_QSTR_CompiledFormatDict,
-    // give it a print-function
-    .print = bitstruct_CompiledFormatDict_print,
-    // give it a constructor
-    .make_new = bitstruct_CompiledFormatDict_make_new,
-    // and the global members
-    .locals_dict = (mp_obj_dict_t*)&bitstruct_CompiledFormatDict_locals_dict,
-};
+MP_DEFINE_CONST_OBJ_TYPE(
+    bitstruct_CompiledFormatDict_type,
+    MP_QSTR_CompiledFormatDict,
+    MP_TYPE_FLAG_NONE,
+    print, bitstruct_CompiledFormatDict_print,
+    make_new, bitstruct_CompiledFormatDict_make_new,
+    locals_dict, &bitstruct_CompiledFormatDict_locals_dict
+    );
 
 /**
  * Python: bitstruct.CompiledFormat(fmt)
