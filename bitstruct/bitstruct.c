@@ -1214,9 +1214,7 @@ mp_obj_t bitstruct_CompiledFormat_make_new(const mp_obj_type_t* type,
     mp_arg_check_num(n_args, n_kw, 1, 1, false);
 
     // raises MemoryError
-    bitstruct_CompiledFormat_obj_t* self = m_new_obj(bitstruct_CompiledFormat_obj_t);
-
-    self->base.type = &bitstruct_CompiledFormat_type;
+    bitstruct_CompiledFormat_obj_t* self = mp_obj_malloc(bitstruct_CompiledFormat_obj_t, type);
 
     // raises MemoryError, NotImplementedError, TypeError, ValueError
     self->info_p = parse_format(args[0]);
@@ -1318,9 +1316,7 @@ mp_obj_t bitstruct_CompiledFormatDict_make_new(const mp_obj_type_t* type,
     mp_arg_check_num(n_args, n_kw, 1, 2, true);
 
     // raises MemoryError
-    bitstruct_CompiledFormatDict_obj_t* self = m_new_obj(bitstruct_CompiledFormatDict_obj_t);
-
-    self->base.type = &bitstruct_CompiledFormatDict_type;
+    bitstruct_CompiledFormatDict_obj_t* self = mp_obj_malloc(bitstruct_CompiledFormatDict_obj_t, type);
 
     self->names_p = mp_const_none;
     if((n_args == 2) && (args[1] != mp_const_none)){
@@ -1734,11 +1730,11 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(bitstruct_byteswap_fun_obj, 2, 3, bit
 STATIC mp_obj_t bitstruct_compile(size_t n_args, const mp_obj_t* args){
     if((n_args == 2) && (args[1] != mp_const_none)){
         // raises MemoryError, NotImplementedError, TypeError, ValueError
-        return bitstruct_CompiledFormatDict_make_new(&mp_type_NoneType, n_args, 0, args);
+        return bitstruct_CompiledFormatDict_make_new(&bitstruct_CompiledFormatDict_type, n_args, 0, args);
     }
 
     // raises MemoryError, NotImplementedError, TypeError, ValueError
-    return bitstruct_CompiledFormat_make_new(&mp_type_NoneType, 1, 0, args);
+    return bitstruct_CompiledFormat_make_new(&bitstruct_CompiledFormat_type, 1, 0, args);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(bitstruct_compile_fun_obj, 1, 2, bitstruct_compile);
 
