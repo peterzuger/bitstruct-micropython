@@ -1740,22 +1740,22 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(bitstruct_compile_fun_obj, 1, 2, bits
 
 
 STATIC const mp_rom_map_elem_t bitstruct_globals_table[] = {
-    { MP_OBJ_NEW_QSTR(MP_QSTR___name__),           MP_OBJ_NEW_QSTR(MP_QSTR_bitstruct)              },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_pack),               MP_ROM_PTR(&bitstruct_pack_fun_obj)             },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_unpack),             MP_ROM_PTR(&bitstruct_unpack_fun_obj)           },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_pack_into),          MP_ROM_PTR(&bitstruct_pack_into_fun_obj)        },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_unpack_from),        MP_ROM_PTR(&bitstruct_unpack_from_fun_obj)      },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_pack_dict),          MP_ROM_PTR(&bitstruct_pack_dict_fun_obj)        },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_unpack_dict),        MP_ROM_PTR(&bitstruct_unpack_dict_fun_obj)      },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_pack_into_dict),     MP_ROM_PTR(&bitstruct_pack_into_dict_fun_obj)   },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_unpack_from_dict),   MP_ROM_PTR(&bitstruct_unpack_from_dict_fun_obj) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_calcsize),           MP_ROM_PTR(&bitstruct_calcsize_fun_obj)         },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_byteswap),           MP_ROM_PTR(&bitstruct_byteswap_fun_obj)         },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_compile),            MP_ROM_PTR(&bitstruct_compile_fun_obj)          },
+    { MP_ROM_QSTR(MP_QSTR___name__),           MP_ROM_QSTR(MP_QSTR_bitstruct)                  },
+    { MP_ROM_QSTR(MP_QSTR_pack),               MP_ROM_PTR(&bitstruct_pack_fun_obj)             },
+    { MP_ROM_QSTR(MP_QSTR_unpack),             MP_ROM_PTR(&bitstruct_unpack_fun_obj)           },
+    { MP_ROM_QSTR(MP_QSTR_pack_into),          MP_ROM_PTR(&bitstruct_pack_into_fun_obj)        },
+    { MP_ROM_QSTR(MP_QSTR_unpack_from),        MP_ROM_PTR(&bitstruct_unpack_from_fun_obj)      },
+    { MP_ROM_QSTR(MP_QSTR_pack_dict),          MP_ROM_PTR(&bitstruct_pack_dict_fun_obj)        },
+    { MP_ROM_QSTR(MP_QSTR_unpack_dict),        MP_ROM_PTR(&bitstruct_unpack_dict_fun_obj)      },
+    { MP_ROM_QSTR(MP_QSTR_pack_into_dict),     MP_ROM_PTR(&bitstruct_pack_into_dict_fun_obj)   },
+    { MP_ROM_QSTR(MP_QSTR_unpack_from_dict),   MP_ROM_PTR(&bitstruct_unpack_from_dict_fun_obj) },
+    { MP_ROM_QSTR(MP_QSTR_calcsize),           MP_ROM_PTR(&bitstruct_calcsize_fun_obj)         },
+    { MP_ROM_QSTR(MP_QSTR_byteswap),           MP_ROM_PTR(&bitstruct_byteswap_fun_obj)         },
+    { MP_ROM_QSTR(MP_QSTR_compile),            MP_ROM_PTR(&bitstruct_compile_fun_obj)          },
 
-    { MP_OBJ_NEW_QSTR(MP_QSTR_CompiledFormat),     MP_ROM_PTR(&bitstruct_CompiledFormat_type)      },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_CompiledFormatDict), MP_ROM_PTR(&bitstruct_CompiledFormatDict_type)  },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_Error),              MP_ROM_PTR(&mp_type_Error)                      },
+    { MP_ROM_QSTR(MP_QSTR_CompiledFormat),     MP_ROM_PTR(&bitstruct_CompiledFormat_type)      },
+    { MP_ROM_QSTR(MP_QSTR_CompiledFormatDict), MP_ROM_PTR(&bitstruct_CompiledFormatDict_type)  },
+    { MP_ROM_QSTR(MP_QSTR_Error),              MP_ROM_PTR(&mp_type_Error)                      },
 };
 
 STATIC MP_DEFINE_CONST_DICT(
