@@ -108,7 +108,6 @@ static void names_get(mp_obj_t self_in, size_t *len, mp_obj_t **items){
     }else if(mp_obj_is_type(self_in, &mp_type_tuple)){
         mp_obj_tuple_get(self_in, len, items);
     }else{
-        // raises TypeError
         mp_raise_TypeError(MP_ERROR_TEXT("Names is not a list or tuple."));
     }
 }
@@ -123,7 +122,6 @@ static size_t names_get_length(mp_obj_t self_in){
         return ((mp_obj_tuple_t*)MP_OBJ_TO_PTR(self_in))->len;
     }
 
-    // raises TypeError
     mp_raise_TypeError(MP_ERROR_TEXT("Names is not a list or tuple."));
 
     return 0;
@@ -164,7 +162,7 @@ static void pack_signed_integer(struct bitstream_writer_t* self_p,
         if(field_info_p->number_of_bits > 64)
             mp_raise_NotImplementedError(MP_ERROR_TEXT("unsigned integer over 64 bits"));
 
-        // raises TypeError
+        // raises TypeError, OverflowError
         int64_t value = mp_obj_get_int(value_p);
 
         uint64_t limit = (1ull << (field_info_p->number_of_bits - 1));
@@ -233,7 +231,7 @@ static void pack_unsigned_integer(struct bitstream_writer_t* self_p,
         if(field_info_p->number_of_bits > 64)
             mp_raise_NotImplementedError(MP_ERROR_TEXT("unsigned integer over 64 bits"));
 
-        // raises TypeError
+        // raises TypeError, OverflowError
         uint64_t value = mp_obj_get_int(value_p);
 
         uint64_t upper;
@@ -822,7 +820,7 @@ static bool bitstruct_mp_obj_get_data(mp_obj_t data_p, size_t* size, char** pack
         *size = len * sizeof(mp_int_t);
         *packed_p = gc_alloc(*size, 0);
         for(size_t j = 0; j < len; j++){
-            // raises TypeError
+            // raises TypeError, OverflowError
             (*packed_p)[j] = mp_obj_get_int(items[j]);
         }
         return true;
@@ -875,7 +873,7 @@ static mp_obj_t unpack(struct info_t* info_p, mp_obj_t data_p, long offset){
 }
 
 static long parse_offset(mp_obj_t offset_p){
-    // raises TypeError
+    // raises TypeError, OverflowError
     unsigned long offset = mp_obj_get_int(offset_p);
 
     if(offset == (unsigned long)-1){
@@ -1638,7 +1636,7 @@ static MP_DEFINE_CONST_FUN_OBJ_1(bitstruct_calcsize_fun_obj, bitstruct_calcsize)
 static mp_obj_t bitstruct_byteswap(size_t n_args, const mp_obj_t* args){
     int offset = 0;
     if(n_args == 3){
-        // raises TypeError
+        // raises TypeError, OverflowError
         offset = mp_obj_get_int(args[2]);
     }
 
