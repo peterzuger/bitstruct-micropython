@@ -141,7 +141,7 @@ static void pack_signed_integer(struct bitstream_writer_t* self_p,
         field_info_p->number_of_bits--;
         size_t size = (field_info_p->number_of_bits + 7) / 8;
         uint8_t* buffer = alloca(size);
-        mp_obj_int_to_bytes_impl(value_p, field_info_p->bitorder, size, buffer);
+        mp_obj_int_to_bytes(value_p, size, buffer, field_info_p->bitorder, true, false);
         int sign = ((mp_obj_int_t*)value_p)->mpz.neg;
 
         if(!field_info_p->bitorder){
@@ -213,7 +213,7 @@ static void pack_unsigned_integer(struct bitstream_writer_t* self_p,
     if(mp_obj_is_exact_type(value_p, &mp_type_int)){
         size_t size = (field_info_p->number_of_bits + 7) / 8;
         uint8_t* buffer = alloca(size);
-        mp_obj_int_to_bytes_impl(value_p, field_info_p->bitorder, size, buffer);
+        mp_obj_int_to_bytes(value_p, size, buffer, field_info_p->bitorder, false, false);
 
         if(!field_info_p->bitorder){
             for(int i = 0; i < (field_info_p->number_of_bits / 8); ++i)
